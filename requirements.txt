@@ -83,5 +83,5 @@ watchdog==6.0.0
 wcwidth==0.2.13
 webencodings==0.5.1
 yarg==0.1.9
-calamine==0.1.0  
+python-calamine==0.3.2 
 xlrd==2.0.1 
