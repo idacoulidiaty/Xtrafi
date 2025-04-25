@@ -1,0 +1,22 @@
+
+# Ignorer les dossiers node_modules
+node_modules/
+
+# Ignorer les fichiers de configuration spécifiques à l'IDE
+.vscode/
+.idea/
+
+
+# Ignorer les fichiers compilés Python
+*.pyc
+__pycache__/
+
+# Ignorer l'environnement virtuel Python
+venv/
+dataviz_xtrafi/
+*.pyc
+__pycache__/
+
+# Ignorer les fichiers temporaires
+*.log
+*.tmp
