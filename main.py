@@ -130,7 +130,8 @@ if df_onglet_1 is not None and df_onglet_2 is not None and df_onglet_3 is not No
         st.dataframe(df_onglet_2, use_container_width=True)
 
     elif onglet_selectionne == "📋 Rapport consolidé (onglet 3)":
-        st.subheader("📋 Rapport Consolidé : Masquez/Démasquez des colonnes")
+        # st.subheader("📋 Rapport Consolidé")
+
 
         # 🧩 Colonnes sélectionnables
         colonnes_masquables = ['Code\nRAPPORT Ind.\nVIRTUEL',
@@ -150,82 +151,108 @@ if df_onglet_1 is not None and df_onglet_2 is not None and df_onglet_3 is not No
        'Total\nValo. Financière\nCollecte\nO.Opér.\nExercice N']
 
         # Filtrage
-        colonnes_visibles = st.multiselect("🕶️ Colonnes à afficher :", options=colonnes_masquables, default=colonnes_masquables)
+        # colonnes_visibles = st.multiselect("🕶️ Colonnes à afficher :", options=colonnes_masquables, default=colonnes_masquables)
 
         # Sélection et affichage
-        df_filtré = df_onglet_3[colonnes_visibles] if colonnes_visibles else pd.DataFrame()
+        # df_filtré = df_onglet_3[colonnes_visibles] if colonnes_visibles else pd.DataFrame()
+
+        df_filtré = df_onglet_3[colonnes_masquables]
+        st.subheader("🔍 Aperçu des données")
+        st.dataframe(df_filtré, use_container_width=True)
         
         
 
     # ---------- AFFICHAGE FINAL ---------- #
     # Onglets
-    tab1, tab2 = st.tabs(["📋 Données formatées", "📊 Visualisations"])
+    tab1, tab2 , tab3, tab4= st.tabs(["📋 TdB REEL N vs REEL N-1", "📋 TdB REEL N vs Obj. Op. N","📋 TdB REEL N vs Obj. Strat. N","📊 Visualisations"])
     
     
     if df_filtré is not None:
         # ---------- Onglet 1 : Tableau formaté ---------- #
         with tab1:
-            st.subheader("📋 Données formatées et mises en forme")
-            st.success(f"✅ Données chargées ({source})")
-
-            st.subheader("🔍 Aperçu des données")
-            st.dataframe(df_filtré, use_container_width=True)
+            # st.subheader("📋 Données formatées et mises en forme")
+            # st.success(f"✅ Données chargées ({source})")
 
 
-            # ---------- KPIs ---------- #
-            # Filtrage des colonnes numériques visibles
-            colonnes_numeriques_visibles = df_filtré.select_dtypes(include='number').columns.tolist()
-            st.subheader("📌 Indicateurs clés")
-            numeric_cols = df_filtré[colonnes_numeriques_visibles]
-            if not numeric_cols.empty:
-                def format_euro(val):
-                    return f"{val:,.2f}".replace(",", "X").replace(".", ",").replace("X", " ") + "€"
 
-                col1, col2, col3 = st.columns(3)
-                col1.metric("💶 Total Valo Financière Collecte Réelle N", format_euro(numeric_cols['Total\nValo. Financière\nCollecte Réelle\nExercice N'].sum().sum()))
-                col2.metric("💶 Total Valo Financière Objectifs Stratégiques", format_euro(numeric_cols['Total\nValo. Financière\nCollecte\nO.Strat\nExercice N'].sum().sum()))
-                col3.metric("💶 Total Valo Financière Objectifs Opérationnels", format_euro(numeric_cols['Total\nValo. Financière\nCollecte\nO.Opér.\nExercice N'].sum().sum()))
-            else:
-                st.warning("Aucune colonne numérique trouvée pour les indicateurs.")
+            # # ---------- KPIs ---------- #
+            # # Filtrage des colonnes numériques visibles
+            # colonnes_numeriques_visibles = df_filtré.select_dtypes(include='number').columns.tolist()
+            # st.subheader("📌 Indicateurs clés")
+            # numeric_cols = df_filtré[colonnes_numeriques_visibles]
+            # if not numeric_cols.empty:
+            #     def format_euro(val):
+            #         return f"{val:,.2f}".replace(",", "X").replace(".", ",").replace("X", " ") + "€"
+
+            #     col1, col2, col3 = st.columns(3)
+            #     col1.metric("💶 Total Valo Financière Collecte Réelle N", format_euro(numeric_cols['Total\nValo. Financière\nCollecte Réelle\nExercice N'].sum().sum()))
+            #     col2.metric("💶 Total Valo Financière Objectifs Stratégiques", format_euro(numeric_cols['Total\nValo. Financière\nCollecte\nO.Strat\nExercice N'].sum().sum()))
+            #     col3.metric("💶 Total Valo Financière Objectifs Opérationnels", format_euro(numeric_cols['Total\nValo. Financière\nCollecte\nO.Opér.\nExercice N'].sum().sum()))
+            # else:
+            #     st.warning("Aucune colonne numérique trouvée pour les indicateurs.")
 
 
             # ---------- RENOMMER LES COLONNES ---------- #
             df_style = df_filtré.rename(columns={
-                'Nom\nAPP Indicateur\nVIRTUEL': 'Nom indicateur abrégé',
-                "Unité de conversion\n(de l'indicateur virtuel)": "Unité de conversion de l'indicateur",
-                'Total\nMontant\nCollecte\nRéelle\nExercice N-1': 'Reel N-1',
-                'Total\nMontant\nCollecte\nRéelle\nExercice N': 'Reel N',
-                'Total\nMontant\nCollecte\nO.Strat Plafond\nExercice N': 'Objectifs Stratégiques PLAFOND période N',
-                'Total\nMontant\nCollecte\nO.Strat Plancher\nExercice N': 'Objectifs Stratégiques SEUIL  période N',
-                'Total\nMontant\nCollecte\nO.Opér.Plafond\nExercice N': 'Objectifs Opérationnels PLAFOND période N',
-                'Total\nMontant\nCollecte\nO.Opér.Plancher\nExercice N': 'Objectifs Opérationnels SEUIL  période N',
-            })
+    'Code\nREPORTING\nInd. VIRTUEL': 'Code Reporting',
+    'Nom\nREPORTING Ind.\nVIRTUEL': 'Nom Reporting',
+    'Nom\nAPP Indicateur\nVIRTUEL': 'Nom indicateur Virtuel',
+    "Unité de conversion\n(de l'indicateur virtuel)": "Unité de conversion de l'indicateur",
+    'Total\nMontant\nCollecte\nRéelle\nExercice N-1': 'Reel N-1',
+    'Total\nValo. Financière\nCollecte Réelle\nExercice N-1': 'Valorisation Financière REEL N-1',
+    'Total\nMontant\nCollecte\nRéelle\nExercice N': 'Reel N',
+    'Total\nValo. Financière\nCollecte Réelle\nExercice N': 'Valorisation Financière REEL N',
+    'Total\nMontant\nCollecte\nO.Strat Plafond\nExercice N': 'Objectifs Stratégiques PLAFOND période N',
+    'Total\nMontant\nCollecte\nO.Strat Plancher\nExercice N': 'Objectifs Stratégiques SEUIL période N',
+    'Total\nValo. Financière\nCollecte\nO.Strat\nExercice N': 'Valorisation Financière Objectifs Stratégiques N',
+    'Total\nMontant\nCollecte\nO.Opér.Plafond\nExercice N': 'Objectifs Opérationnels PLAFOND période N',
+    'Total\nMontant\nCollecte\nO.Opér.Plancher\nExercice N': 'Objectifs Opérationnels SEUIL période N',
+    'Total\nValo. Financière\nCollecte\nO.Opér.\nExercice N': 'Valorisation Financière Objectifs Opérationnels N'
+})
 
-            # ---------- CALCUL DES VARIATIONS ---------- #
-            df_style["VARIATION Objectifs Stratégiques période N  VS  Réel N"] = (
-                df_style["Objectifs Stratégiques PLAFOND période N"] - df_style["Reel N"]
-            )
-            df_style["VARIATION Objectifs Opérationnels période N  VS  Réel N"] = (
-                df_style["Objectifs Opérationnels PLAFOND période N"] - df_style["Reel N"]
-            )
+                       # ---------- CALCUL DES VARIATIONS ---------- #
+            df_style["VARIATION Réel N vs Réel N-1 (%)"] = (
+                (df_style["Reel N"] - df_style["Reel N-1"]) / df_style["Reel N-1"]
+            ) * 100
+
+            # Variation Réel N vs Objectifs Stratégiques PLAFOND
+            df_style["VARIATION Objectifs Stratégiques PLAFOND N vs Réel N (%)"] = (
+                (df_style["Reel N"] - df_style["Objectifs Stratégiques PLAFOND période N"]) / df_style["Objectifs Stratégiques PLAFOND période N"]
+            ) * 100
+
+            # Variation Réel N vs Objectifs Stratégiques PLANCHER
+            df_style["VARIATION Objectifs Stratégiques SEUIL N vs Réel N (%)"] = (
+                (df_style["Reel N"] - df_style["Objectifs Stratégiques SEUIL période N"]) / df_style["Objectifs Stratégiques SEUIL période N"]
+            ) * 100
+
+            # Variation Réel N vs Objectifs Opérationnels PLAFOND
+            df_style["VARIATION Objectifs Opérationnels PLAFOND N vs Réel N (%)"] = (
+                (df_style["Reel N"] - df_style["Objectifs Opérationnels PLAFOND période N"]) / df_style["Objectifs Opérationnels PLAFOND période N"]
+            ) * 100
+
+            # Variation Réel N vs Objectifs Opérationnels PLANCHER
+            df_style["VARIATION Objectifs Opérationnels SEUIL N vs Réel N (%)"] = (
+                (df_style["Reel N"] - df_style["Objectifs Opérationnels SEUIL période N"]) / df_style["Objectifs Opérationnels SEUIL période N"]
+            ) * 100
 
             # ---------- AFFICHAGE DU TABLEAU STYLÉ ---------- #
-            st.subheader("📋 Données formatées et mises en forme")
+            st.subheader("📋 Tableau de bord REEL N vs REEL N-1")
 
             cols_to_display = [
-                "Nom indicateur abrégé",
-                "Unité de conversion de l'indicateur",
+                'Code\nRAPPORT Ind.\nVIRTUEL',
+                'Nom\nRAPPORT Ind.\nVIRTUEL',
+                'Code Reporting',
+                'Nom Reporting',
+                "Nom indicateur Virtuel",
                 "Reel N-1",
                 "Reel N",
-                "Objectifs Stratégiques SEUIL  période N",
-                "Objectifs Stratégiques PLAFOND période N",
-                "VARIATION Objectifs Stratégiques période N  VS  Réel N",
-                "Objectifs Opérationnels SEUIL  période N",
-                "Objectifs Opérationnels PLAFOND période N",
-                "VARIATION Objectifs Opérationnels période N  VS  Réel N"
+                "VARIATION Réel N vs Réel N-1 (%)",
+                "Unité de conversion de l'indicateur",
+                'Valorisation Financière REEL N-1',
+                'Valorisation Financière REEL N'
             ]
-
-            # Fonctions de style
+            df1 = df_style[cols_to_display]
+            # Fonction de style pour variations
             def style_variation(val):
                 try:
                     if pd.isna(val):
@@ -235,22 +262,19 @@ if df_onglet_1 is not None and df_onglet_2 is not None and df_onglet_3 is not No
                 except:
                     return ''
 
+            # Application des styles 
             styler = (
                 df_style[cols_to_display].style
-                .applymap(style_variation, subset=["VARIATION Objectifs Stratégiques période N  VS  Réel N"])
-                .applymap(style_variation, subset=["VARIATION Objectifs Opérationnels période N  VS  Réel N"])
-                .applymap(lambda v: 'font-weight: bold' if isinstance(v, str) and "Territoire" in v else '', subset=["Nom indicateur abrégé"])
-                .applymap(lambda v: 'background-color: #FFF2CC', subset=["Objectifs Stratégiques PLAFOND période N"])
-                .applymap(lambda v: 'background-color: #D9EAD3', subset=["Reel N"])
-                .applymap(lambda v: 'background-color: #F4CCCC', subset=[
-                    "VARIATION Objectifs Stratégiques période N  VS  Réel N",
-                    "VARIATION Objectifs Opérationnels période N  VS  Réel N"
-                ])
-                .applymap(lambda v: 'background-color: #EAD1DC', subset=["Objectifs Opérationnels PLAFOND période N"])
+                .applymap(lambda v: 'background-color: palegreen', subset=["Reel N"] if "Reel N" in cols_to_display else [])
+                .applymap(lambda v: 'background-color: gainsboro', subset=["Reel N-1"] if "Reel N-1" in cols_to_display else [])
+                .applymap(lambda v: 'background-color: lemonchiffon', subset=["VARIATION Réel N vs Réel N-1 (%)"] if "VARIATION Réel N vs Réel N-1 (%)" in cols_to_display else [])
+                .applymap(lambda v: 'background-color: paleturquoise', subset=["Valorisation Financière REEL N-1"] if "Valorisation Financière REEL N-1" in cols_to_display else [])
+                .applymap(lambda v: 'background-color: tan', subset=["Valorisation Financière REEL N"] if "Valorisation Financière REEL N" in cols_to_display else [])
                 .set_table_styles([
                     {
-                        'selector': 'th',  # headers
+                        'selector': 'th',
                         'props': [
+                            ('background-color', '#f2f2f2'),  # couleur pour les en-têtes
                             ('white-space', 'pre-wrap'),
                             ('word-wrap', 'break-word'),
                             ('max-width', '150px'),
@@ -258,7 +282,7 @@ if df_onglet_1 is not None and df_onglet_2 is not None and df_onglet_3 is not No
                         ]
                     },
                     {
-                        'selector': 'td',  # data cells
+                        'selector': 'td',
                         'props': [
                             ('white-space', 'pre-wrap'),
                             ('word-wrap', 'break-word'),
@@ -269,23 +293,146 @@ if df_onglet_1 is not None and df_onglet_2 is not None and df_onglet_3 is not No
                 ])
             )
 
-
             st.markdown(
                 styler.to_html(),
                 unsafe_allow_html=True
             )
+        with tab2:
+            #-------------------- TDB REEL vs OBJ OP --------------------
+            st.subheader("\n \n")
+            st.subheader("Tableau de Bord REEL N vs Objectifs Opérationnels N")
+
+            # Sélection des colonnes à afficher
+            cols_to_display = [
+                'Code\nRAPPORT Ind.\nVIRTUEL',
+                'Nom\nRAPPORT Ind.\nVIRTUEL',
+                'Code Reporting',
+                'Nom Reporting',
+                "Nom indicateur Virtuel",
+                "Reel N",
+                'Objectifs Opérationnels SEUIL période N',
+                "VARIATION Objectifs Opérationnels SEUIL N vs Réel N (%)",
+                'Objectifs Opérationnels PLAFOND période N',
+                "VARIATION Objectifs Opérationnels PLAFOND N vs Réel N (%)",
+                "Unité de conversion de l'indicateur",
+                'Valorisation Financière REEL N',
+                'Valorisation Financière Objectifs Opérationnels N'
+            ]
+
+            df2 = df_style[cols_to_display]
+
+            # Application des styles
+            styler = (
+                df2.style
+                .applymap(lambda v: 'background-color: palegreen', subset=["Reel N"])
+                .applymap(lambda v: 'background-color: gainsboro', subset=['Objectifs Opérationnels SEUIL période N'])
+                .applymap(lambda v: 'background-color: gainsboro', subset=['Objectifs Opérationnels PLAFOND période N'])
+                .applymap(lambda v: 'background-color: lemonchiffon', subset=["VARIATION Objectifs Opérationnels PLAFOND N vs Réel N (%)"])
+                .applymap(lambda v: 'background-color: lemonchiffon', subset=["VARIATION Objectifs Opérationnels SEUIL N vs Réel N (%)"])
+                .applymap(lambda v: 'background-color: paleturquoise', subset=['Valorisation Financière Objectifs Opérationnels N'])
+                .applymap(lambda v: 'background-color: tan', subset=["Valorisation Financière REEL N"])
+                .set_table_styles([
+                    {
+                        'selector': 'th',
+                        'props': [
+                            ('background-color', '#f2f2f2'),
+                            ('white-space', 'pre-wrap'),
+                            ('word-wrap', 'break-word'),
+                            ('max-width', '150px'),
+                            ('font-size', '12px')
+                        ]
+                    },
+                    {
+                        'selector': 'td',
+                        'props': [
+                            ('white-space', 'pre-wrap'),
+                            ('word-wrap', 'break-word'),
+                            ('max-width', '150px'),
+                            ('font-size', '12px')
+                        ]
+                    }
+                ])
+            )
+
+            # Affichage du tableau stylisé
+            st.markdown(styler.to_html(), unsafe_allow_html=True)
+
+        with tab3:
+            #-------------------- TDB REEL vs OBJ STRAT --------------------
+            st.subheader("\n  \n")
+            st.subheader("Tableau de Bord REEL N vs Objectifs Stratégiques N")
+
+            # Sélection des colonnes à afficher
+            cols_to_display = [
+                'Code\nRAPPORT Ind.\nVIRTUEL',
+                'Nom\nRAPPORT Ind.\nVIRTUEL',
+                'Code Reporting',
+                'Nom Reporting',
+                "Nom indicateur Virtuel",
+                "Reel N",
+                'Objectifs Stratégiques SEUIL période N',
+                "VARIATION Objectifs Stratégiques SEUIL N vs Réel N (%)",
+                'Objectifs Stratégiques PLAFOND période N',
+                "VARIATION Objectifs Stratégiques PLAFOND N vs Réel N (%)",
+                "Unité de conversion de l'indicateur",
+                'Valorisation Financière REEL N',
+                'Valorisation Financière Objectifs Stratégiques N'
+            ]
+
+            df3 = df_style[cols_to_display]
+
+            # Application des styles
+            styler = (
+                df3.style
+                .applymap(lambda v: 'background-color: palegreen', subset=["Reel N"])
+                .applymap(lambda v: 'background-color: gainsboro', subset=['Objectifs Stratégiques SEUIL période N'])
+                .applymap(lambda v: 'background-color: gainsboro', subset=['Objectifs Stratégiques PLAFOND période N'])
+                .applymap(lambda v: 'background-color: lemonchiffon', subset=["VARIATION Objectifs Stratégiques SEUIL N vs Réel N (%)"])
+                .applymap(lambda v: 'background-color: lemonchiffon', subset=["VARIATION Objectifs Stratégiques PLAFOND N vs Réel N (%)"])
+                .applymap(lambda v: 'background-color: paleturquoise', subset=['Valorisation Financière Objectifs Stratégiques N'])
+                .applymap(lambda v: 'background-color: tan', subset=["Valorisation Financière REEL N"])
+                .set_table_styles([
+                    {
+                        'selector': 'th',
+                        'props': [
+                            ('background-color', '#f2f2f2'),
+                            ('white-space', 'pre-wrap'),
+                            ('word-wrap', 'break-word'),
+                            ('max-width', '150px'),
+                            ('font-size', '12px')
+                        ]
+                    },
+                    {
+                        'selector': 'td',
+                        'props': [
+                            ('white-space', 'pre-wrap'),
+                            ('word-wrap', 'break-word'),
+                            ('max-width', '150px'),
+                            ('font-size', '12px')
+                        ]
+                    }
+                ])
+            )
+
+            # Affichage du tableau stylisé
+            st.markdown(styler.to_html(), unsafe_allow_html=True)
 
 
         # ---------- COURBE ---------- #
-        with tab2: 
+        with tab4: 
             selected_fig = None  # Pour l'export plus bas
 
             st.subheader("📈 Visualisation")
 
             # Graphique 1 - Eau consommée (Barre horizontale avec valeur réelle)
             eau = df_filtré[df_filtré['Nom\nAPP Indicateur\nVIRTUEL'].str.contains("eau consommée", case=False, na=False)]
-            eau_val = float(eau['Total\nMontant\nCollecte\nRéelle\nExercice N'].values[0])
-            objectif_eau = 1500000  
+            objectif_eau = 1500000 
+            if not eau.empty and 'Total\nMontant\nCollecte\nRéelle\nExercice N' in eau.columns:
+                eau_val = float(eau['Total\nMontant\nCollecte\nRéelle\nExercice N'].values[0])
+            else:
+                st.warning("⚠️ Donnée manquante pour le montant de collecte réelle (exercice N)")
+                eau_val = 0 
+                 
 
             st.subheader("💧 Total eau consommée")
 
@@ -325,8 +472,11 @@ if df_onglet_1 is not None and df_onglet_2 is not None and df_onglet_3 is not No
             # Graphique 2 - % d'eau stockée avec une jauge
             stock = df_filtré[df_filtré['Nom\nAPP Indicateur\nVIRTUEL'].str.contains("eau stockée", case=False, na=False)]
             st.subheader("📊 % d’eau stockée")
-            value = float(stock['Total\nMontant\nCollecte\nRéelle\nExercice N'].values[0])
-
+            if not stock.empty and 'Total\nMontant\nCollecte\nRéelle\nExercice N' in stock.columns:
+                value = float(stock['Total\nMontant\nCollecte\nRéelle\nExercice N'].values[0])
+            else:
+                st.warning("⚠️ Donnée manquante pour l’eau stockée (exercice N)")
+                value = 0
             # Affichage du pourcentage sous forme de texte
             st.metric(label="Eau stockée", value=f"{value:.1f} %")
 
@@ -359,10 +509,70 @@ if df_onglet_1 is not None and df_onglet_2 is not None and df_onglet_3 is not No
             rse = df_filtré[df_filtré['Nom\nAPP Indicateur\nVIRTUEL'].str.contains("réunion RSE", case=False, na=False)]
             st.subheader("📅 Fréquence Réunions RSE")
             fig2, ax2 = plt.subplots()
-            val = float(str(rse['Total\nMontant\nCollecte\nRéelle\nExercice N'].values[0]).replace('%', ''))
+            if not rse.empty and 'Total\nMontant\nCollecte\nRéelle\nExercice N' in rse.columns:
+                val_str = str(rse['Total\nMontant\nCollecte\nRéelle\nExercice N'].values[0]).replace('%', '')
+                try:
+                    val = float(val_str)
+                except ValueError:
+                    st.warning("⚠️ Format de valeur incorrect pour le RSE (exercice N)")
+                    val = 0
+            else:
+                st.warning("⚠️ Donnée manquante pour le RSE (exercice N)")
+                val = 0
             ax2.pie([val, 100-val], labels=[f"Réunions RSE ({val}%)", f"Autres Réunions ({100-val}%)"], autopct="%1.1f%%", startangle=90)
             ax2.set_title("Fréquence Réunions RSE")
             st.pyplot(fig2)
+
+
+
+
+            # 🔍 Filtrage de l’indicateur "femmes"
+            indicateur_femmes = df_filtré[df_filtré['Nom\nAPP Indicateur\nVIRTUEL'].str.contains("femmes", case=False, na=False)]
+
+            if not indicateur_femmes.empty:
+                valeur_n1 = indicateur_femmes['Total\nMontant\nCollecte\nRéelle\nExercice N-1'].values[0]
+                valeur_n = indicateur_femmes['Total\nMontant\nCollecte\nRéelle\nExercice N'].values[0]
+
+                seuil = indicateur_femmes['Total\nMontant\nCollecte\nO.Opér.Plancher\nExercice N'].values[0]
+                plafond = indicateur_femmes['Total\nMontant\nCollecte\nO.Opér.Plafond\nExercice N'].values[0]
+                # objectif = indicateur_femmes['Total\nValo. Financière\nCollecte\nO.Opér.\nExercice N'].values[0]
+
+                # 📊 Création du graphique
+                fig_femmes = go.Figure()
+
+                fig_femmes.add_trace(go.Bar(
+                    x=['Exercice N-1', 'Exercice N'],
+                    y=[valeur_n1, valeur_n],
+                    name='Nombre de femmes',
+                    marker_color='blue'
+                ))
+
+                fig_femmes.add_trace(go.Scatter(
+                    x=['Exercice N-1', 'Exercice N'], y=[seuil, seuil],
+                    mode='lines', name='Seuil (Plancher)', line=dict(color='orange', dash='dash')
+                ))
+
+                fig_femmes.add_trace(go.Scatter(
+                    x=['Exercice N-1', 'Exercice N'], y=[plafond, plafond],
+                    mode='lines', name='Plafond', line=dict(color='red', dash='dash')
+                ))
+
+                # fig_femmes.add_trace(go.Scatter(
+                #     x=['Exercice N-1', 'Exercice N'], y=[objectif, objectif],
+                #     mode='lines', name='Objectif Opérationnel', line=dict(color='green', dash='dash')
+                # ))
+
+                # Mise en forme
+                fig_femmes.update_layout(
+                    title="Évolution du nombre total de femmes dans l’effectif VS Objectifs opérationnels plafond et plancher",
+                    xaxis_title="Exercice",
+                    yaxis_title="Nombre de femmes",
+                    barmode='group',
+                    template='plotly_white'
+                )
+
+                # ➕ Affichage dans Streamlit
+                st.plotly_chart(fig_femmes)
 
 
         # ---------- EXPORT ---------- #
@@ -371,17 +581,40 @@ if df_onglet_1 is not None and df_onglet_2 is not None and df_onglet_3 is not No
         if st.button("📤 Exporter en Excel"):
             output = BytesIO()
             with pd.ExcelWriter(output, engine='openpyxl') as writer:
-                # Onglet 1 : Données
-                df_style.to_excel(writer, sheet_name='Données', index=False)
+                # === 1. EXPORT TABLEAUX AVEC STYLE ===
+                def style_dataframe(df):
+                    return df.style.set_properties(**{
+                        'background-color': '#f0f8ff',
+                        'color': 'black',
+                        'border-color': 'gray',
+                        'border-width': '1px',
+                        'border-style': 'solid'
+                    }).set_table_styles([{
+                        'selector': 'th',
+                        'props': [
+                            ('background-color', '#1f4e79'),
+                            ('color', 'white'),
+                            ('font-weight', 'bold')
+                        ]
+                    }])
 
-                # Onglet 2 : Graphiques
+
+                style_dataframe(df1).to_excel(writer, sheet_name="Tableau de Bord REEL N vs REEL N-1", index=False)
+                style_dataframe(df2).to_excel(writer, sheet_name="Tableau de Bord REEL N vs Objectifs Opérationnels N", index=False)
+                style_dataframe(df3).to_excel(writer, sheet_name="Tableau de Bord REEL N vs Objectifs Stratégiques N", index=False)
+
+                # Onglet Graphiques
                 workbook = writer.book
                 sheet = workbook.create_sheet(title='Graphiques')
 
                 # Graphique 1 - Eau consommée (barre de progression réelle vs objectif)
                 eau = df_filtré[df_filtré['Nom\nAPP Indicateur\nVIRTUEL'].str.contains("eau consommée", case=False, na=False)]
-                eau_val = float(eau['Total\nMontant\nCollecte\nRéelle\nExercice N'].values[0])
-                objectif_eau = 1500000  # Valeur cible
+                objectif_eau = 1500000 
+                if not eau.empty and 'Total\nMontant\nCollecte\nRéelle\nExercice N' in eau.columns:
+                    eau_val = float(eau['Total\nMontant\nCollecte\nRéelle\nExercice N'].values[0])
+                else:
+                    st.warning("⚠️ Donnée manquante pour le montant de collecte réelle (exercice N)")
+                    eau_val = 0 
 
                 fig1, ax1 = plt.subplots(figsize=(6, 1.5))
                 ax1.barh([0], [objectif_eau], color="#e0e0e0", edgecolor='gray')  # Barre objectif en fond
@@ -404,7 +637,11 @@ if df_onglet_1 is not None and df_onglet_2 is not None and df_onglet_3 is not No
 
                 # Graphique 2 - % d’eau stockée avec jauge
                 stock = df_filtré[df_filtré['Nom\nAPP Indicateur\nVIRTUEL'].str.contains("eau stockée", case=False, na=False)]
-                value = float(stock['Total\nMontant\nCollecte\nRéelle\nExercice N'].values[0])
+                if not stock.empty and 'Total\nMontant\nCollecte\nRéelle\nExercice N' in stock.columns:
+                    value = float(stock['Total\nMontant\nCollecte\nRéelle\nExercice N'].values[0])
+                else:
+                    st.warning("⚠️ Donnée manquante pour l’eau stockée (exercice N)")
+                    value = 0
 
                 # Création de la jauge avec Plotly
 
@@ -448,6 +685,14 @@ if df_onglet_1 is not None and df_onglet_2 is not None and df_onglet_3 is not No
                 img_buffer3.seek(0)
                 img3 = XLImage(img_buffer3)
                 sheet.add_image(img3, 'B16')  # Positionner le 3e graphique à une position différente
+
+
+
+                img_buffer_femmes = BytesIO()
+                fig_femmes.write_image(img_buffer_femmes, format="png")
+                img_buffer_femmes.seek(0)
+                img_femmes = XLImage(img_buffer_femmes)
+                sheet.add_image(img_femmes, 'M28') 
 
             st.download_button(
                 label="📥 Télécharger le fichier Excel",
