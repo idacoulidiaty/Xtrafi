@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 import os
 from io import BytesIO
 import plotly.express as px
@@ -251,34 +252,39 @@ if df_onglet_1 is not None and df_onglet_2 is not None and df_onglet_3 is not No
                 'Valorisation Financière REEL N-1',
                 'Valorisation Financière REEL N'
             ]
-            df1 = df_style[cols_to_display]
-            # Fonction de style pour variations
-            def style_variation(val):
-                try:
-                    if pd.isna(val):
-                        return ''
-                    color = 'green' if val >= 0 else 'red'
-                    return f'background-color: {color}; color: white; font-weight: bold'
-                except:
-                    return ''
 
-            # Application des styles 
+            df1 = df_style[cols_to_display]
+
+            # Formatage personnalisé
             styler = (
-                df_style[cols_to_display].style
-                .applymap(lambda v: 'background-color: palegreen', subset=["Reel N"] if "Reel N" in cols_to_display else [])
-                .applymap(lambda v: 'background-color: gainsboro', subset=["Reel N-1"] if "Reel N-1" in cols_to_display else [])
-                .applymap(lambda v: 'background-color: lemonchiffon', subset=["VARIATION Réel N vs Réel N-1 (%)"] if "VARIATION Réel N vs Réel N-1 (%)" in cols_to_display else [])
-                .applymap(lambda v: 'background-color: paleturquoise', subset=["Valorisation Financière REEL N-1"] if "Valorisation Financière REEL N-1" in cols_to_display else [])
-                .applymap(lambda v: 'background-color: tan', subset=["Valorisation Financière REEL N"] if "Valorisation Financière REEL N" in cols_to_display else [])
+                df1.style
+                # Valorisation financière : pas de décimale
+                .format({col: "{:,.0f}" for col in df1.columns if "Valorisation Financière" in col})
+                # Pourcentages : 1 décimale, sinon 2 décimales (pour "Reel N", "Reel N-1" et colonnes variation)
+                .format({
+                    col: "{:.1f}%" if "%" in col else "{:.2f}"
+                    for col in df1.columns
+                    if col.startswith("VARIATION") or col in ["Reel N", "Reel N-1"]
+                })
+                # Alignement à droite de toutes les cellules
+                .set_properties(**{'text-align': 'right'})
+                # Styles couleurs comme avant
+                .applymap(lambda v: 'background-color: palegreen', subset=["Reel N"])
+                .applymap(lambda v: 'background-color: gainsboro', subset=["Reel N-1"])
+                .applymap(lambda v: 'background-color: lemonchiffon', subset=["VARIATION Réel N vs Réel N-1 (%)"])
+                .applymap(lambda v: 'background-color: paleturquoise', subset=["Valorisation Financière REEL N-1"])
+                .applymap(lambda v: 'background-color: tan', subset=["Valorisation Financière REEL N"])
+                # Style de la table et des cellules
                 .set_table_styles([
                     {
                         'selector': 'th',
                         'props': [
-                            ('background-color', '#f2f2f2'),  # couleur pour les en-têtes
+                            ('background-color', '#f2f2f2'),
                             ('white-space', 'pre-wrap'),
                             ('word-wrap', 'break-word'),
                             ('max-width', '150px'),
-                            ('font-size', '12px')
+                            ('font-size', '12px'),
+                            ('text-align', 'center')
                         ]
                     },
                     {
@@ -287,22 +293,23 @@ if df_onglet_1 is not None and df_onglet_2 is not None and df_onglet_3 is not No
                             ('white-space', 'pre-wrap'),
                             ('word-wrap', 'break-word'),
                             ('max-width', '150px'),
-                            ('font-size', '12px')
+                            ('font-size', '12px'),
+                            ('text-align', 'right')  # renforcement alignement chiffres à droite
                         ]
                     }
                 ])
             )
 
-            st.markdown(
-                styler.to_html(),
-                unsafe_allow_html=True
-            )
+            st.markdown(styler.to_html(), unsafe_allow_html=True)
+
+            
         with tab2:
             #-------------------- TDB REEL vs OBJ OP --------------------
             st.subheader("\n \n")
             st.subheader("Tableau de Bord REEL N vs Objectifs Opérationnels N")
 
-            # Sélection des colonnes à afficher
+            st.subheader("\n \n")
+
             cols_to_display = [
                 'Code\nRAPPORT Ind.\nVIRTUEL',
                 'Nom\nRAPPORT Ind.\nVIRTUEL',
@@ -321,48 +328,39 @@ if df_onglet_1 is not None and df_onglet_2 is not None and df_onglet_3 is not No
 
             df2 = df_style[cols_to_display]
 
-            # Application des styles
             styler = (
-                df2.style
-                .applymap(lambda v: 'background-color: palegreen', subset=["Reel N"])
-                .applymap(lambda v: 'background-color: gainsboro', subset=['Objectifs Opérationnels SEUIL période N'])
-                .applymap(lambda v: 'background-color: gainsboro', subset=['Objectifs Opérationnels PLAFOND période N'])
-                .applymap(lambda v: 'background-color: lemonchiffon', subset=["VARIATION Objectifs Opérationnels PLAFOND N vs Réel N (%)"])
-                .applymap(lambda v: 'background-color: lemonchiffon', subset=["VARIATION Objectifs Opérationnels SEUIL N vs Réel N (%)"])
-                .applymap(lambda v: 'background-color: paleturquoise', subset=['Valorisation Financière Objectifs Opérationnels N'])
-                .applymap(lambda v: 'background-color: tan', subset=["Valorisation Financière REEL N"])
-                .set_table_styles([
-                    {
-                        'selector': 'th',
-                        'props': [
-                            ('background-color', '#f2f2f2'),
-                            ('white-space', 'pre-wrap'),
-                            ('word-wrap', 'break-word'),
-                            ('max-width', '150px'),
-                            ('font-size', '12px')
-                        ]
-                    },
-                    {
-                        'selector': 'td',
-                        'props': [
-                            ('white-space', 'pre-wrap'),
-                            ('word-wrap', 'break-word'),
-                            ('max-width', '150px'),
-                            ('font-size', '12px')
-                        ]
-                    }
-                ])
-            )
+    df2.style
+    .applymap(lambda v: 'background-color: palegreen', subset=["Reel N"])
+    .applymap(lambda v: 'background-color: gainsboro', subset=[
+        'Objectifs Opérationnels SEUIL période N',
+        'Objectifs Opérationnels PLAFOND période N'])
+    .applymap(lambda v: 'background-color: lemonchiffon', subset=[
+        "VARIATION Objectifs Opérationnels PLAFOND N vs Réel N (%)",
+        "VARIATION Objectifs Opérationnels SEUIL N vs Réel N (%)"])
+    .applymap(lambda v: 'background-color: paleturquoise', subset=['Valorisation Financière Objectifs Opérationnels N'])
+    .applymap(lambda v: 'background-color: tan', subset=["Valorisation Financière REEL N"])
+    .set_table_styles([
+        {'selector': 'th', 'props': [('background-color', '#f2f2f2'), ('white-space', 'pre-wrap'), ('font-size', '12px')]},
+        {'selector': 'td', 'props': [('white-space', 'pre-wrap'), ('text-align', 'right'), ('font-size', '12px')]}
+    ])
+    .format({
+        col: "{:.0f}" for col in df2.columns if "Valorisation Financière" in col
+    } | {
+        col: "{:.1f}%" if "%" in col else "{:.2f}" for col in df2.columns
+        if col not in [
+            "Valorisation Financière REEL N",
+            "Valorisation Financière Objectifs Opérationnels N"
+        ] and df2[col].dtype.kind in "fi"
+    })
+)
 
-            # Affichage du tableau stylisé
             st.markdown(styler.to_html(), unsafe_allow_html=True)
+
 
         with tab3:
             #-------------------- TDB REEL vs OBJ STRAT --------------------
             st.subheader("\n  \n")
             st.subheader("Tableau de Bord REEL N vs Objectifs Stratégiques N")
-
-            # Sélection des colonnes à afficher
             cols_to_display = [
                 'Code\nRAPPORT Ind.\nVIRTUEL',
                 'Nom\nRAPPORT Ind.\nVIRTUEL',
@@ -381,199 +379,584 @@ if df_onglet_1 is not None and df_onglet_2 is not None and df_onglet_3 is not No
 
             df3 = df_style[cols_to_display]
 
-            # Application des styles
             styler = (
-                df3.style
-                .applymap(lambda v: 'background-color: palegreen', subset=["Reel N"])
-                .applymap(lambda v: 'background-color: gainsboro', subset=['Objectifs Stratégiques SEUIL période N'])
-                .applymap(lambda v: 'background-color: gainsboro', subset=['Objectifs Stratégiques PLAFOND période N'])
-                .applymap(lambda v: 'background-color: lemonchiffon', subset=["VARIATION Objectifs Stratégiques SEUIL N vs Réel N (%)"])
-                .applymap(lambda v: 'background-color: lemonchiffon', subset=["VARIATION Objectifs Stratégiques PLAFOND N vs Réel N (%)"])
-                .applymap(lambda v: 'background-color: paleturquoise', subset=['Valorisation Financière Objectifs Stratégiques N'])
-                .applymap(lambda v: 'background-color: tan', subset=["Valorisation Financière REEL N"])
-                .set_table_styles([
-                    {
-                        'selector': 'th',
-                        'props': [
-                            ('background-color', '#f2f2f2'),
-                            ('white-space', 'pre-wrap'),
-                            ('word-wrap', 'break-word'),
-                            ('max-width', '150px'),
-                            ('font-size', '12px')
-                        ]
-                    },
-                    {
-                        'selector': 'td',
-                        'props': [
-                            ('white-space', 'pre-wrap'),
-                            ('word-wrap', 'break-word'),
-                            ('max-width', '150px'),
-                            ('font-size', '12px')
-                        ]
-                    }
-                ])
-            )
+    df3.style
+    .applymap(lambda v: 'background-color: palegreen', subset=["Reel N"])
+    .applymap(lambda v: 'background-color: gainsboro', subset=[
+        'Objectifs Stratégiques SEUIL période N',
+        'Objectifs Stratégiques PLAFOND période N'])
+    .applymap(lambda v: 'background-color: lemonchiffon', subset=[
+        "VARIATION Objectifs Stratégiques PLAFOND N vs Réel N (%)",
+        "VARIATION Objectifs Stratégiques SEUIL N vs Réel N (%)"])
+    .applymap(lambda v: 'background-color: paleturquoise', subset=['Valorisation Financière Objectifs Stratégiques N'])
+    .applymap(lambda v: 'background-color: tan', subset=["Valorisation Financière REEL N"])
+    .set_table_styles([
+        {'selector': 'th', 'props': [('background-color', '#f2f2f2'), ('white-space', 'pre-wrap'), ('font-size', '12px')]},
+        {'selector': 'td', 'props': [('white-space', 'pre-wrap'), ('text-align', 'right'), ('font-size', '12px')]}
+    ])
+    .format({
+        col: "{:.0f}" for col in df3.columns if "Valorisation Financière" in col
+    } | {
+        col: "{:.1f}%" if "%" in col else "{:.2f}" for col in df3.columns
+        if col not in [
+            "Valorisation Financière REEL N",
+            "Valorisation Financière Objectifs Stratégiques N"
+        ] and df3[col].dtype.kind in "fi"
+    })
+)
 
-            # Affichage du tableau stylisé
+
             st.markdown(styler.to_html(), unsafe_allow_html=True)
 
-
-        # ---------- COURBE ---------- #
+        # ---------- GRAPHIQUES ---------- #
         with tab4: 
-            selected_fig = None  # Pour l'export plus bas
+                selected_fig = None  # Pour l'export plus bas
 
-            st.subheader("📈 Visualisation")
-
-            # Graphique 1 - Eau consommée (Barre horizontale avec valeur réelle)
-            eau = df_filtré[df_filtré['Nom\nAPP Indicateur\nVIRTUEL'].str.contains("eau consommée", case=False, na=False)]
-            objectif_eau = 1500000 
-            if not eau.empty and 'Total\nMontant\nCollecte\nRéelle\nExercice N' in eau.columns:
-                eau_val = float(eau['Total\nMontant\nCollecte\nRéelle\nExercice N'].values[0])
-            else:
-                st.warning("⚠️ Donnée manquante pour le montant de collecte réelle (exercice N)")
-                eau_val = 0 
-                 
-
-            st.subheader("💧 Total eau consommée")
-
-            # Créer une barre horizontale avec Plotly
-            fig1 = go.Figure()
-            fig1.add_trace(go.Bar(
-                x=[eau_val],
-                y=["Eau consommée"],
-                orientation='h',
-                marker_color='dodgerblue',
-                name="Réel"
-            ))
-
-            fig1.add_trace(go.Bar(
-                x=[max(objectif_eau - eau_val, 0)],
-                y=["Eau consommée"],
-                orientation='h',
-                marker_color='lightgray',
-                name="Reste à consommer",
-                hoverinfo='none'
-            ))
-
-            fig1.update_layout(
-                title="Avancement de la consommation d’eau",
-                xaxis=dict(range=[0, objectif_eau], title="LE"),
-                barmode='stack',
-                height=120,
-                margin=dict(l=100, r=20, t=40, b=20),
-                showlegend=False
-            )
-
-            st.metric(label="Eau consommée", value=f"{eau_val:,.0f}".replace(",", " ") + " Litres d'Eau")
-            st.plotly_chart(fig1, use_container_width=True)
+                st.subheader("📈 Visualisation")
+                st.subheader("\n \n")
 
 
-
-            # Graphique 2 - % d'eau stockée avec une jauge
-            stock = df_filtré[df_filtré['Nom\nAPP Indicateur\nVIRTUEL'].str.contains("eau stockée", case=False, na=False)]
-            st.subheader("📊 % d’eau stockée")
-            if not stock.empty and 'Total\nMontant\nCollecte\nRéelle\nExercice N' in stock.columns:
-                value = float(stock['Total\nMontant\nCollecte\nRéelle\nExercice N'].values[0])
-            else:
-                st.warning("⚠️ Donnée manquante pour l’eau stockée (exercice N)")
-                value = 0
-            # Affichage du pourcentage sous forme de texte
-            st.metric(label="Eau stockée", value=f"{value:.1f} %")
-
-            # Création de la jauge
-            fig2 = go.Figure(go.Indicator(
-            mode="gauge+number",
-            value=value,
-            number={'suffix': " %"},  # <-- C’est ici qu’on ajoute le %
-            title={"text": "Pourcentage d'eau stockée"},
-            gauge={
-                'axis': {'range': [0, 100]},
-                'bar': {'color': "lightblue"},
-                'steps': [
-                    {'range': [0, 50], 'color': "orange"},
-                    {'range': [50, 75], 'color': "yellow"},
-                    {'range': [75, 100], 'color': "green"}
-                ],
-                'threshold': {
-                    'line': {'color': "black", 'width': 4},
-                    'thickness': 0.75,
-                    'value': value
-                }
-            }
-            ))
-
-            # Affichage de la jauge
-            st.plotly_chart(fig2)
-
-            # Graphique 3 - Fréquence réunion RSE
-            rse = df_filtré[df_filtré['Nom\nAPP Indicateur\nVIRTUEL'].str.contains("réunion RSE", case=False, na=False)]
-            st.subheader("📅 Fréquence Réunions RSE")
-            fig2, ax2 = plt.subplots()
-            if not rse.empty and 'Total\nMontant\nCollecte\nRéelle\nExercice N' in rse.columns:
-                val_str = str(rse['Total\nMontant\nCollecte\nRéelle\nExercice N'].values[0]).replace('%', '')
-                try:
-                    val = float(val_str)
-                except ValueError:
-                    st.warning("⚠️ Format de valeur incorrect pour le RSE (exercice N)")
-                    val = 0
-            else:
-                st.warning("⚠️ Donnée manquante pour le RSE (exercice N)")
-                val = 0
-            ax2.pie([val, 100-val], labels=[f"Réunions RSE ({val}%)", f"Autres Réunions ({100-val}%)"], autopct="%1.1f%%", startangle=90)
-            ax2.set_title("Fréquence Réunions RSE")
-            st.pyplot(fig2)
-
-
-
-
-            # 🔍 Filtrage de l’indicateur "femmes"
-            indicateur_femmes = df_filtré[df_filtré['Nom\nAPP Indicateur\nVIRTUEL'].str.contains("femmes", case=False, na=False)]
-
-            if not indicateur_femmes.empty:
-                valeur_n1 = indicateur_femmes['Total\nMontant\nCollecte\nRéelle\nExercice N-1'].values[0]
-                valeur_n = indicateur_femmes['Total\nMontant\nCollecte\nRéelle\nExercice N'].values[0]
-
-                seuil = indicateur_femmes['Total\nMontant\nCollecte\nO.Opér.Plancher\nExercice N'].values[0]
-                plafond = indicateur_femmes['Total\nMontant\nCollecte\nO.Opér.Plafond\nExercice N'].values[0]
-                # objectif = indicateur_femmes['Total\nValo. Financière\nCollecte\nO.Opér.\nExercice N'].values[0]
-
-                # 📊 Création du graphique
-                fig_femmes = go.Figure()
-
-                fig_femmes.add_trace(go.Bar(
-                    x=['Exercice N-1', 'Exercice N'],
-                    y=[valeur_n1, valeur_n],
-                    name='Nombre de femmes',
-                    marker_color='blue'
-                ))
-
-                fig_femmes.add_trace(go.Scatter(
-                    x=['Exercice N-1', 'Exercice N'], y=[seuil, seuil],
-                    mode='lines', name='Seuil (Plancher)', line=dict(color='orange', dash='dash')
-                ))
-
-                fig_femmes.add_trace(go.Scatter(
-                    x=['Exercice N-1', 'Exercice N'], y=[plafond, plafond],
-                    mode='lines', name='Plafond', line=dict(color='red', dash='dash')
-                ))
-
-                # fig_femmes.add_trace(go.Scatter(
-                #     x=['Exercice N-1', 'Exercice N'], y=[objectif, objectif],
-                #     mode='lines', name='Objectif Opérationnel', line=dict(color='green', dash='dash')
+                # Graphique 1 - Eau consommée (Barre horizontale avec valeur réelle)
+                # eau = df_filtré[df_filtré['Nom\nAPP Indicateur\nVIRTUEL'].str.contains("eau consommée", case=False, na=False)]
+                # objectif_eau = 1500000 
+                # if not eau.empty and 'Total\nMontant\nCollecte\nRéelle\nExercice N' in eau.columns:
+                #     eau_val = float(eau['Total\nMontant\nCollecte\nRéelle\nExercice N'].values[0])
+                # else:
+                #     st.warning("⚠️ Donnée manquante pour le montant de collecte réelle (exercice N)")
+                #     eau_val = 0 
+                    
+                # # st.subheader("💧 Total eau consommée")
+                # # Créer une barre horizontale avec Plotly
+                # fig1 = go.Figure()
+                # fig1.add_trace(go.Bar(
+                #     x=[eau_val],
+                #     y=["Eau consommée"],
+                #     orientation='h',
+                #     marker_color='dodgerblue',
+                #     name="Réel"
                 # ))
+                # fig1.add_trace(go.Bar(
+                #     x=[max(objectif_eau - eau_val, 0)],
+                #     y=["Eau consommée"],
+                #     orientation='h',
+                #     marker_color='lightgray',
+                #     name="Reste à consommer",
+                #     hoverinfo='none'
+                # ))
+                # fig1.update_layout(
+                #     title="Avancement de la consommation d’eau",
+                #     xaxis=dict(range=[0, objectif_eau], title="LE"),
+                #     barmode='stack',
+                #     height=120,
+                #     margin=dict(l=100, r=20, t=40, b=20),
+                #     showlegend=False
+                # )
+                # st.metric(label= "Eau consommée", value=f"{eau_val:,.0f}".replace(",", " ") + " Litres d'Eau")
 
-                # Mise en forme
-                fig_femmes.update_layout(
-                    title="Évolution du nombre total de femmes dans l’effectif VS Objectifs opérationnels plafond et plancher",
-                    xaxis_title="Exercice",
-                    yaxis_title="Nombre de femmes",
-                    barmode='group',
-                    template='plotly_white'
-                )
+                col1,col2 = st.columns(2)
+                with col1:
 
-                # ➕ Affichage dans Streamlit
-                st.plotly_chart(fig_femmes)
+                    with st.container():
+                        st.subheader("💧 Total eau consommée N vs N-1")
+                    
+                        eau = df_onglet_2[df_onglet_2['Nom Ind.N2\nAPP'].str.contains("eau consommée", case=False, na=False)]
+                    
+                        if not eau.empty and 'Total\nMontant\nCollecte\nRéelle\nExercice N' in eau.columns:
+                            valeur_n1 = eau['Total\nMontant\nCollecte\nRéelle\nExercice N-1']
+                            valeur_n = eau['Total\nMontant\nCollecte\nRéelle\nExercice N']
+                            plafond_strat = eau['Total\nMontant\nCollecte\nO.Strat Plafond\nExercice N']
+                            plancher_strat = eau['Total\nMontant\nCollecte\nO.Strat Plancher\nExercice N']
+                            plafond_oper = eau['Total\nMontant\nCollecte\nO.Opér.Plafond\nExercice N']
+                            plancher_oper = eau['Total\nMontant\nCollecte\nO.Opér.Plancher\nExercice N']
+                    
+                            fig1 = go.Figure()
+                            fig1.add_trace(go.Bar(
+                                name='Exercice N-1',
+                                x=eau['Nom Ind.N2\nAPP'],
+                                y=valeur_n1,
+                                marker_color='lightblue',
+                                width=0.1  # ✅ largeur réduite
+                            ))
+                            fig1.add_trace(go.Bar(
+                                name='Exercice N',
+                                x=eau['Nom Ind.N2\nAPP'],
+                                y=valeur_n,
+                                marker_color='blue',
+                                width=0.1  # ✅ largeur réduite
+                            ))
+                    
+                            def add_horizontal_line(fig, y_value, label, color, dash):
+                                if pd.notna(y_value):
+                                    fig.add_shape(
+                                        type="line",
+                                        x0=-0.5, x1=0.5,
+                                        y0=y_value, y1=y_value,
+                                        line=dict(color=color, width=2, dash=dash),
+                                        xref='x', yref='y'
+                                    )
+                                    fig.add_annotation(
+                                        x=0.5,
+                                        y=y_value,
+                                        text=label,
+                                        showarrow=False,
+                                        yanchor="bottom",
+                                        font=dict(color=color)
+                                    )
+                    
+                            # ✅ MULTISELECT placé à l’intérieur du même container que le graphique
+                            options_obj = st.multiselect(
+                                "🎯 Objectifs à afficher sur le graphique",
+                                options=["Stratégique - Plafond", "Stratégique - Plancher", "Opérationnel - Plafond", "Opérationnel - Plancher"],
+                                default=[],
+                                key="multiselect_objectifs_eau"
+                            )
+                    
+                            # Ajout des lignes sélectionnées
+                            if "Stratégique - Plafond" in options_obj:
+                                add_horizontal_line(fig1, np.sum(plafond_strat), "Obj. Strat. plafond moyen", "green", "dash")
+                            if "Stratégique - Plancher" in options_obj:
+                                add_horizontal_line(fig1, np.sum(plancher_strat), "Obj. Strat. plancher moyen", "black", "dash")
+                            if "Opérationnel - Plafond" in options_obj:
+                                add_horizontal_line(fig1, np.sum(plafond_oper), "Obj. Opé. plafond moyen", "orange", "dash")
+                            if "Opérationnel - Plancher" in options_obj:
+                                add_horizontal_line(fig1, np.sum(plancher_oper), "Obj. Opé. plancher moyen", "yellow", "dash")
+                    
+                            # ✅ TOUJOURS DANS LE MÊME CONTAINER
+                            st.markdown("ℹ️ Sélectionnez un ou plusieurs types d’objectifs pour les afficher.")
+                            st.plotly_chart(fig1, use_container_width=True)
 
+
+            
+                with col2:
+                    st.subheader("% Eau stockée N-1 vs N")
+
+                    stock = df_onglet_2[df_onglet_2['Nom Ind.N2\nAPP'].str.contains("eau stockée", case=False, na=False)]
+
+                    if not stock.empty:
+                        st.subheader("📊 % d’eau stockée – Exercice N vs N-1")
+
+                        # Récupération des valeurs
+                        value_n1 = float(stock['Total\nMontant\nCollecte\nRéelle\nExercice N-1'].values[0])
+                        value_n = float(stock['Total\nMontant\nCollecte\nRéelle\nExercice N'].values[0])
+
+                        plafond_strat = stock['Total\nMontant\nCollecte\nO.Strat Plafond\nExercice N'].values[0]
+                        plancher_strat = stock['Total\nMontant\nCollecte\nO.Strat Plancher\nExercice N'].values[0]
+                        plafond_oper = stock['Total\nMontant\nCollecte\nO.Opér.Plafond\nExercice N'].values[0]
+                        plancher_oper = stock['Total\nMontant\nCollecte\nO.Opér.Plancher\nExercice N'].values[0]
+
+                        # Sélecteur multichoix
+                        options_jauge = st.multiselect(
+                            "🎯 Objectifs à afficher sur la jauge",
+                            options=[
+                                "Stratégique - Plafond",
+                                "Stratégique - Plancher",
+                                "Opérationnel - Plafond",
+                                "Opérationnel - Plancher"
+                            ],
+                            default=[],
+                            key="multiselect_objectifs_jauge"
+                        )
+
+                        # Création du graphique
+                        fig2 = go.Figure()
+
+                        fig2.add_trace(go.Bar(
+                            y=["Eau stockée"],
+                            x=[value_n1],
+                            name='Exercice N-1',
+                            orientation='h',
+                            marker_color='lightblue',
+                            text=f"{value_n1}%",
+                            textposition='outside',
+                            width=0.3
+                        ))
+
+                        fig2.add_trace(go.Bar(
+                            y=["Eau stockée"],
+                            x=[value_n],
+                            name='Exercice N',
+                            orientation='h',
+                            marker_color='blue',
+                            text=f"{value_n}%",
+                            textposition='outside',
+                            width=0.3
+                        ))
+
+                        # Ajout des seuils verticaux (adapté comme dans fig4)
+                        def add_vertical_line(fig, x_val, label, color, dash):
+                            if pd.notna(x_val):
+                                fig.add_shape(
+                                    type="line",
+                                    x0=x_val, x1=x_val,
+                                    y0=-0.5, y1=0.5,
+                                    line=dict(color=color, width=2, dash=dash),
+                                    xref='x', yref='y'
+                                )
+                                fig.add_annotation(
+                                    x=x_val,
+                                    y=0.5,
+                                    text=label,
+                                    showarrow=False,
+                                    yanchor="bottom",
+                                    textangle=-90,
+                                    font=dict(color=color),
+                                    xanchor="left"
+                                )
+
+                        if "Stratégique - Plafond" in options_jauge:
+                            add_vertical_line(fig2, plafond_strat, "Obj. Strat. plafond", "green", "dash")
+                        if "Stratégique - Plancher" in options_jauge:
+                            add_vertical_line(fig2, plancher_strat, "Obj. Strat. plancher", "green", "dot")
+                        if "Opérationnel - Plafond" in options_jauge:
+                            add_vertical_line(fig2, plafond_oper, "Obj. Opé. plafond", "orange", "dash")
+                        if "Opérationnel - Plancher" in options_jauge:
+                            add_vertical_line(fig2, plancher_oper, "Obj. Opé. plancher", "orange", "dot")
+
+                        # Mise en forme finale
+                        fig2.update_layout(
+                            xaxis=dict(title="Pourcentage", range=[0, 100]),
+                            yaxis=dict(title=""),
+                            barmode='group',
+                            template='plotly_white',
+                            height=350
+                        )
+
+                        st.plotly_chart(fig2, use_container_width=True)
+
+                    else:
+                        st.warning("⚠️ Donnée manquante pour l’eau stockée.")
+
+
+
+                col3,col4 = st.columns(2)
+                with col3:
+                    # # Graphique 3 - Fréquence réunion RSE
+                    # rse = df_onglet_2[df_onglet_2['Nom Ind.N2\nAPP'].str.contains("réunion RSE", case=False, na=False)]
+                    # st.subheader("📅 Fréquence Réunions RSE")
+                    # fig3, ax2 = plt.subplots()
+                    # if not rse.empty and 'Total\nMontant\nCollecte\nRéelle\nExercice N' in rse.columns:
+                    #     val_str = str(rse['Total\nMontant\nCollecte\nRéelle\nExercice N'].values[0]).replace('%', '')
+                    #     try:
+                    #         val = float(val_str)
+                    #     except ValueError:
+                    #         st.warning("⚠️ Format de valeur incorrect pour le RSE (exercice N)")
+                    #         val = 0
+                    # else:
+                    #     st.warning("⚠️ Donnée manquante pour le RSE (exercice N)")
+                    #     val = 0
+                    # ax2.pie([val, 100-val], labels=[f"Réunions RSE ({val}%)", f"Autres Réunions ({100-val}%)"], autopct="%1.1f%%", startangle=90)
+                    # ax2.set_title("Fréquence Réunions RSE")
+                    # st.plotly_chart(fig3, use_container_width=True)
+
+                # #Graphique 4 : Évolution du nombre total de femmes dans l’effectif VS Objectifs opérationnels plafond et plancher
+                # #🔍 Filtrage de l’indicateur "femmes"
+                # idicateur_femmes = df_filtré[df_filtré['Nom\nAPP Indicateur\nVIRTUEL'].str.contains("femmes", case=False, na=False)]
+                # i not indicateur_femmes.empty:
+                #    valeur_n1 = indicateur_femmes['Total\nMontant\nCollecte\nRéelle\nExercice N-1'].values[0]
+                #    valeur_n = indicateur_femmes['Total\nMontant\nCollecte\nRéelle\nExercice N'].values[0]
+                #    seuil = indicateur_femmes['Total\nMontant\nCollecte\nO.Opér.Plancher\nExercice N'].values[0]
+                #    plafond = indicateur_femmes['Total\nMontant\nCollecte\nO.Opér.Plafond\nExercice N'].values[0]
+                #    # objectif = indicateur_femmes['Total\nValo. Financière\nCollecte\nO.Opér.\nExercice N'].values[0]
+                #    # 📊 Création du graphique
+                #    fig_femmes = go.Figure()
+                #    fig_femmes.add_trace(go.Bar(
+                #        x=['Exercice N-1', 'Exercice N'],
+                #        y=[valeur_n1, valeur_n],
+                #        name='Nombre de femmes',
+                #        marker_color='blue'
+                #    ))
+                #    fig_femmes.add_trace(go.Scatter(
+                #        x=['Exercice N-1', 'Exercice N'], y=[seuil, seuil],
+                #        mode='lines', name='Seuil (Plancher)', line=dict(color='orange', dash='dash')
+                #    ))
+                #    fig_femmes.add_trace(go.Scatter(
+                #        x=['Exercice N-1', 'Exercice N'], y=[plafond, plafond],
+                #        mode='lines', name='Plafond', line=dict(color='red', dash='dash')
+                #    ))
+                #    # fig_femmes.add_trace(go.Scatter(
+                #    #     x=['Exercice N-1', 'Exercice N'], y=[objectif, objectif],
+                #    #     mode='lines', name='Objectif Opérationnel', line=dict(color='green', dash='dash')
+                #    # ))
+                #    # Mise en forme
+                #    fig_femmes.update_layout(
+                #        title="Évolution du nombre total de femmes dans l’effectif VS Objectifs opérationnels plafond et plancher",
+                #        xaxis_title="Exercice",
+                #        yaxis_title="Nombre de femmes",
+                #        barmode='group',
+                #        template='plotly_white'
+                #    )
+                #    # ➕ Affichage dans Streamlit
+                #    st.plotly_chart(fig_femmes)
+
+
+                # with col3:
+                    with st.container():
+                        # Graphique 4 : Consommation d'eau des sièges, agences, bureaux VS Consommation totale d'eau
+                        # 🔍 Sélection des indicateurs eau
+                        indicateurs_eau = df_onglet_2[df_onglet_2['Nom Ind.N2\nAPP'].str.contains("consommation d'eau", case=False, na=False)
+                        ]
+                        if not indicateurs_eau.empty:
+                            st.subheader("📊 Consommation d'eau des sièges, agences, bureaux VS Consommation totale d'eau")
+                            noms_indicateurs = []
+                            valeurs_n1 = []
+                            valeurs_n = []
+                            plafond_strat_list = []
+                            plancher_strat_list = []
+                            plafond_oper_list = []
+                            plancher_oper_list = []
+                            for _, row in indicateurs_eau.iterrows():
+                                nom = row['Nom Ind.N2\nAPP']
+                                noms_indicateurs.append(nom)
+                                valeur_n1 = row.get('Total\nMontant\nCollecte\nRéelle\nExercice N-1', 0)
+                                valeur_n = row.get('Total\nMontant\nCollecte\nRéelle\nExercice N', 0)
+                                valeurs_n1.append(valeur_n1)
+                                valeurs_n.append(valeur_n)
+                                plafond_strat_list.append(row.get('Total\nMontant\nCollecte\nO.Strat Plafond\nExercice N'))
+                                plancher_strat_list.append(row.get('Total\nMontant\nCollecte\nO.Strat Plancher\nExercice N'))
+                                plafond_oper_list.append(row.get('Total\nMontant\nCollecte\nO.Opér.Plafond\nExercice N'))
+                                plancher_oper_list.append(row.get('Total\nMontant\nCollecte\nO.Opér.Plancher\nExercice N'))
+                            fig4 = go.Figure()
+                            # Barres
+                            fig4.add_trace(go.Bar(name='Exercice N-1', x=noms_indicateurs, y=valeurs_n1, marker_color='lightblue', width = 0.2))
+                            fig4.add_trace(go.Bar(name='Exercice N', x=noms_indicateurs, y=valeurs_n, marker_color='blue', width = 0.2))
+                            # Lignes horizontales pour les plafonds et planchers (on filtre les valeurs non nulles)
+                            def add_horizontal_line(fig, y_value, label, color, dash):
+                                if pd.notna(y_value):
+                                    fig4.add_shape(
+                                        type="line",
+                                        x0=-0.5, x1=len(noms_indicateurs) - 0.5,
+                                        y0=y_value, y1=y_value,
+                                        line=dict(color=color, width=2, dash=dash),
+                                        xref='x', yref='y'
+                                    )
+                                    fig4.add_annotation(
+                                        x=len(noms_indicateurs) - 1,
+                                        y=y_value,
+                                        text=label,
+                                        showarrow=False,
+                                        yanchor="bottom",
+                                        font=dict(color=color)
+                                    )
+                            # Liste déroulante pour choisir les objectifs à afficher
+                            options_obj = st.multiselect(
+                                "🎯 Objectifs à afficher",
+                                options=["Stratégique - Plafond", "Stratégique - Plancher", "Opérationnel - Plafond", "Opérationnel - Plancher"],
+                                default=[],  # Possibilité demettre une valeur par défaut ici
+                                key="multiselect_objectifs"
+                            )
+                            # Ajout des lignes si sélectionnées
+                            if "Stratégique - Plafond" in options_obj:
+                                add_horizontal_line(fig4, np.nanmean(plafond_strat_list), "Obj. Strat. plafond moyen", "green", "dash")
+                            if "Stratégique - Plancher" in options_obj:
+                                add_horizontal_line(fig4, np.nanmean(plancher_strat_list), "Obj. Strat. plancher moyen", "green", "dot")
+                            if "Opérationnel - Plafond" in options_obj:
+                                add_horizontal_line(fig4, np.nanmean(plafond_oper_list), "Obj. Opé. plafond moyen", "orange", "dash")
+                            if "Opérationnel - Plancher" in options_obj:
+                                add_horizontal_line(fig4, np.nanmean(plancher_oper_list), "Obj. Opé. plancher moyen", "orange", "dot")
+                            st.markdown("ℹ️ Vous pouvez sélectionner un ou plusieurs types d’objectifs à afficher sur le graphique.")
+                            # Layout
+                            fig4.update_layout(
+                                title="Consommation d'eau des sièges, agences, bureaux VS Consommation totale d'eau",
+                                barmode='group',
+                                xaxis_title="Indicateur",
+                                yaxis_title="Volume (Litres)",
+                                template='plotly_white',
+                                height=500
+                            )
+                            st.plotly_chart(fig4, use_container_width=True)
+
+
+
+                
+                with col4:
+                                    #Graphique 5 : Consommations carburant 
+                    #  Sélection des indicateurs carburant
+                    indicateurs_carburant = df_onglet_2[df_onglet_2['Nom Ind.N2\nAPP'].isin([
+                        "Consommation totale de carburant véhicule",
+                        "Consommation diesel des véhicules",
+                        "Consommation Essence/Super des véhicules"
+                    ])]
+
+                    # Préparer les listes de seuils
+                    plafond_strat_list = []
+                    plancher_strat_list = []
+                    plafond_oper_list = []
+                    plancher_oper_list = []
+
+                    if not indicateurs_carburant.empty:
+                        st.subheader("📊 Consommations carburant véhicules")
+
+                        fig5 = go.Figure()
+
+                        for i, row in indicateurs_carburant.iterrows():
+                            nom = row['Nom Ind.N2\nAPP']
+
+                            valeur_n1 = row.get('Total\nMontant\nCollecte\nRéelle\nExercice N-1', 0)
+                            valeur_n = row.get('Total\nMontant\nCollecte\nRéelle\nExercice N', 0)
+
+                            fig5.add_trace(go.Bar(
+                                name=f"{nom} - N-1", x=[nom], y=[valeur_n1],
+                                marker_color='lightblue'
+                            ))
+                            fig5.add_trace(go.Bar(
+                                name=f"{nom} - N", x=[nom], y=[valeur_n],
+                                marker_color='blue'
+                            ))
+
+                            # Ajout des valeurs dans les listes DANS la boucle
+                            plafond_strat_list.append(row.get('Total\nMontant\nCollecte\nO.Strat Plafond\nExercice N'))
+                            plancher_strat_list.append(row.get('Total\nMontant\nCollecte\nO.Strat Plancher\nExercice N'))
+                            plafond_oper_list.append(row.get('Total\nMontant\nCollecte\nO.Opér.Plafond\nExercice N'))
+                            plancher_oper_list.append(row.get('Total\nMontant\nCollecte\nO.Opér.Plancher\nExercice N'))
+
+                        # Liste déroulante pour choisir les objectifs à afficher
+                        options_obj = st.multiselect(
+                            "🎯 Objectifs à afficher",
+                            options=["Stratégique - Plafond", "Stratégique - Plancher", "Opérationnel - Plafond", "Opérationnel - Plancher"],
+                            default=[],
+                            key="multiselect_objectifs_2"
+                        )
+
+                        # Ajout des lignes si sélectionnées
+                        if "Stratégique - Plafond" in options_obj:
+                            add_horizontal_line(fig5, np.nanmean(plafond_strat_list), "Obj. Strat. plafond moyen", "green", "dash")
+                        if "Stratégique - Plancher" in options_obj:
+                            add_horizontal_line(fig5, np.nanmean(plancher_strat_list), "Obj. Strat. plancher moyen", "green", "dot")
+                        if "Opérationnel - Plafond" in options_obj:
+                            add_horizontal_line(fig5, np.nanmean(plafond_oper_list), "Obj. Opé. plafond moyen", "orange", "dash")
+                        if "Opérationnel - Plancher" in options_obj:
+                            add_horizontal_line(fig5, np.nanmean(plancher_oper_list), "Obj. Opé. plancher moyen", "orange", "dot")
+
+                        st.markdown("ℹ️ Vous pouvez sélectionner un ou plusieurs types d’objectifs à afficher sur le graphique.")
+
+                        fig5.update_layout(
+                            title="Consommations carburant véhicules",
+                            barmode='group',
+                            xaxis_title="Indicateur",
+                            yaxis_title="Valeur (Litres)",
+                            template='plotly_white',
+                            height=500
+                        )
+
+                        st.plotly_chart(fig5, use_container_width=True)
+
+
+
+                col5,col6 = st.columns(2)
+                with col5:
+                                    #Graphique 6 : Gazs à effet de serre
+                    #  Sélection des indicateurs carburant
+                    indicateurs_rgaes = df_onglet_2[df_onglet_2['Nom Ind.N2\nAPP'].isin([
+                        "Rejets de gaz à effets de serre (RGAES)",
+                        "RGAES hors production éléctrique",
+                    ])]
+
+                    if not indicateurs_rgaes.empty:
+                        st.subheader("📊 Rejets Gaz à Effet de Serre N-1 vs N")
+
+                        fig6 = go.Figure()
+
+                        # Préparer les listes de seuils
+                        plafond_strat_list = []
+                        plancher_strat_list = []
+                        plafond_oper_list = []
+                        plancher_oper_list = []
+
+                        for i, row in indicateurs_rgaes.iterrows():
+                            nom = row['Nom Ind.N2\nAPP']
+
+                            valeur_n1 = row.get('Total\nMontant\nCollecte\nRéelle\nExercice N-1', 0)
+                            valeur_n = row.get('Total\nMontant\nCollecte\nRéelle\nExercice N', 0)
+
+                            fig6.add_trace(go.Bar(
+                                name=f"{nom} - N-1", x=[nom], y=[valeur_n1],
+                                marker_color='lightblue'
+                            ))
+                            fig6.add_trace(go.Bar(
+                                name=f"{nom} - N", x=[nom], y=[valeur_n],
+                                marker_color='blue'
+                            ))
+
+                            # Ajout des valeurs dans les listes
+                            plafond_strat_list.append(row.get('Total\nMontant\nCollecte\nO.Strat Plafond\nExercice N'))
+                            plancher_strat_list.append(row.get('Total\nMontant\nCollecte\nO.Strat Plancher\nExercice N'))
+                            plafond_oper_list.append(row.get('Total\nMontant\nCollecte\nO.Opér.Plafond\nExercice N'))
+                            plancher_oper_list.append(row.get('Total\nMontant\nCollecte\nO.Opér.Plancher\nExercice N'))
+
+                        # Fonction pour ajouter une ligne horizontale
+                        def add_horizontal_line(fig, y_value, label, color, dash):
+                            if pd.notna(y_value):
+                                fig.add_shape(
+                                    type="line",
+                                    x0=-0.5, x1=len(indicateurs_rgaes) - 0.5,
+                                    y0=y_value, y1=y_value,
+                                    line=dict(color=color, width=2, dash=dash),
+                                    xref='x', yref='y'
+                                )
+                                fig.add_annotation(
+                                    x=len(indicateurs_rgaes) - 1,
+                                    y=y_value,
+                                    text=label,
+                                    showarrow=False,
+                                    yanchor="bottom",
+                                    font=dict(color=color)
+                                )
+
+                        # Sélection des objectifs à afficher
+                        options_obj = st.multiselect(
+                            "🎯 Objectifs à afficher",
+                            options=["Stratégique - Plafond", "Stratégique - Plancher", "Opérationnel - Plafond", "Opérationnel - Plancher"],
+                            default=[],
+                            key="multiselect_objectifs_3"
+                        )
+
+                        # Ajout des lignes
+                        if "Stratégique - Plafond" in options_obj:
+                            add_horizontal_line(fig6, np.nanmean(plafond_strat_list), "Obj. Strat. plafond moyen", "green", "dash")
+                        if "Stratégique - Plancher" in options_obj:
+                            add_horizontal_line(fig6, np.nanmean(plancher_strat_list), "Obj. Strat. plancher moyen", "green", "dot")
+                        if "Opérationnel - Plafond" in options_obj:
+                            add_horizontal_line(fig6, np.nanmean(plafond_oper_list), "Obj. Opé. plafond moyen", "orange", "dash")
+                        if "Opérationnel - Plancher" in options_obj:
+                            add_horizontal_line(fig6, np.nanmean(plancher_oper_list), "Obj. Opé. plancher moyen", "orange", "dot")
+
+                        st.markdown("ℹ️ Vous pouvez sélectionner un ou plusieurs types d’objectifs à afficher sur le graphique.")
+
+                        # Layout
+                        fig6.update_layout(
+                            title="Rejets Gaz à Effet de Serre N-1 vs N",
+                            barmode='group',
+                            xaxis_title="Indicateur",
+                            yaxis_title="Valeur (Litres)",
+                            template='plotly_white',
+                            height=500
+                        )
+
+                        st.plotly_chart(fig6, use_container_width=True)
+
+
+
+                # figures = [fig1, fig2, fig3, fig4,fig5]
+                # titres = ["💧 Total eau consommée N vs N-1", "💧 Pourcentage d'eau stockée", "📊 Fréquence Réunions RSE", 
+                #           "📊Consommation d'eau des sièges, agences, bureaux VS Consommation totale d'eau","Consommations carburant véhicules"
+                #           ]
+
+                # for i in range(0, len(figures), 2):
+                #     cols = st.columns(2)
+                #     for j in range(2):
+                #         if i + j < len(figures):
+                #             with cols[j]:
+                #                 with st.container():
+                #                     st.markdown(
+                #                         f"""
+                #                         <div style="border:1px solid #ddd; padding:15px; border-radius:10px; box-shadow: 2px 2px 8px rgba(0,0,0,0.1); background-color: '#fafafa';">
+                #                             <h4 style="text-align:center;">{titres[i + j]}</h4>
+                #                         """,
+                #                         unsafe_allow_html=True
+                #                     )
+                #                     # 🛠 Ajouter un `key` unique ici
+                #                     st.plotly_chart(figures[i + j], use_container_width=True, key=f"fig_{i}_{j}")
+                #                     st.markdown("</div>", unsafe_allow_html=True)
 
         # ---------- EXPORT ---------- #
         st.subheader("⬇️ Exporter les données et visualisations")
@@ -608,62 +991,17 @@ if df_onglet_1 is not None and df_onglet_2 is not None and df_onglet_3 is not No
                 sheet = workbook.create_sheet(title='Graphiques')
 
                 # Graphique 1 - Eau consommée (barre de progression réelle vs objectif)
-                eau = df_filtré[df_filtré['Nom\nAPP Indicateur\nVIRTUEL'].str.contains("eau consommée", case=False, na=False)]
-                objectif_eau = 1500000 
-                if not eau.empty and 'Total\nMontant\nCollecte\nRéelle\nExercice N' in eau.columns:
-                    eau_val = float(eau['Total\nMontant\nCollecte\nRéelle\nExercice N'].values[0])
-                else:
-                    st.warning("⚠️ Donnée manquante pour le montant de collecte réelle (exercice N)")
-                    eau_val = 0 
-
-                fig1, ax1 = plt.subplots(figsize=(6, 1.5))
-                ax1.barh([0], [objectif_eau], color="#e0e0e0", edgecolor='gray')  # Barre objectif en fond
-                ax1.barh([0], [min(eau_val, objectif_eau)], color="#2196F3")  # Eau consommée
-                ax1.set_xlim(0, objectif_eau)
-                ax1.set_yticks([])
-                ax1.set_xticks([0, objectif_eau / 2, objectif_eau])
-                ax1.set_xticklabels([f"0", f"{int(objectif_eau/2):,}", f"{int(objectif_eau):,}"])
-                ax1.set_title("Avancement de l’eau consommée (LE)", fontsize=12)
-                ax1.spines[['top', 'right', 'left']].set_visible(False)
-                ax1.set_xlabel("LE consommés")
 
                 # Convertir en image PNG
+                # Graphique 1 - Eau consommée (barre de progression réelle vs objectif)
                 img_buffer1 = BytesIO()
-                fig1.savefig(img_buffer1, format="png", bbox_inches="tight")
+                fig1.write_image(img_buffer1, format="png")  # ✅ write_image pour Plotly
                 img_buffer1.seek(0)
                 img1 = XLImage(img_buffer1)
                 sheet.add_image(img1, 'B2')
 
 
                 # Graphique 2 - % d’eau stockée avec jauge
-                stock = df_filtré[df_filtré['Nom\nAPP Indicateur\nVIRTUEL'].str.contains("eau stockée", case=False, na=False)]
-                if not stock.empty and 'Total\nMontant\nCollecte\nRéelle\nExercice N' in stock.columns:
-                    value = float(stock['Total\nMontant\nCollecte\nRéelle\nExercice N'].values[0])
-                else:
-                    st.warning("⚠️ Donnée manquante pour l’eau stockée (exercice N)")
-                    value = 0
-
-                # Création de la jauge avec Plotly
-
-                fig2 = go.Figure(go.Indicator(
-                    mode="gauge+number",
-                    value=value,
-                    title={"text": "Pourcentage d'eau stockée"},
-                    gauge={
-                        'axis': {'range': [0, 100]},
-                        'bar': {'color': "lightblue"},
-                        'steps': [
-                            {'range': [0, 50], 'color': "orange"},
-                            {'range': [50, 75], 'color': "yellow"},
-                            {'range': [75, 100], 'color': "green"}
-                        ],
-                        'threshold': {
-                            'line': {'color': "black", 'width': 4},
-                            'thickness': 0.75,
-                            'value': value
-                        }
-                    }
-                ))
 
                 # Convertir le graphique de la jauge en image PNG et l'ajouter au fichier Excel
                 img_buffer2 = BytesIO()
@@ -672,27 +1010,45 @@ if df_onglet_1 is not None and df_onglet_2 is not None and df_onglet_3 is not No
                 img2 = XLImage(img_buffer2)
                 sheet.add_image(img2, 'M2')  # Positionner le graphique de la jauge à une position différente
 
-                # Graphique 3 - Fréquence Réunion RSE
-                rse = df_filtré[df_filtré['Nom\nAPP Indicateur\nVIRTUEL'].str.contains("réunion RSE", case=False, na=False)]
-                fig3, ax3 = plt.subplots()
-                val = float(str(rse['Total\nMontant\nCollecte\nRéelle\nExercice N'].values[0]).replace('%', ''))
-                ax3.pie([val, 100-val], labels=[f"Réunions RSE ({val}%)", f"Autres Réunions ({100-val}%)"], autopct="%1.1f%%", startangle=90)
-                ax3.set_title("Fréquence Réunions RSE")
-
-                # Convertir le graphique en image PNG et l'ajouter au fichier Excel
-                img_buffer3 = BytesIO()
-                fig3.savefig(img_buffer3, format="png")
-                img_buffer3.seek(0)
-                img3 = XLImage(img_buffer3)
-                sheet.add_image(img3, 'B16')  # Positionner le 3e graphique à une position différente
+                # # Graphique 3 - Fréquence Réunion RSE
+                # img_buffer3 = BytesIO()
+                # fig3.savefig(img_buffer3, format="png")
+                # img_buffer3.seek(0)
+                # img3 = XLImage(img_buffer3)
+                # sheet.add_image(img3, 'B16')  # Positionner le 3e graphique à une position différente
 
 
+                                # Graphique 4 
+                img_buffer4 = BytesIO()
+                fig4.write_image(img_buffer4, format="png")
+                img_buffer4.seek(0)
+                img4 = XLImage(img_buffer4)
+                sheet.add_image(img4, 'M31') 
 
-                img_buffer_femmes = BytesIO()
-                fig_femmes.write_image(img_buffer_femmes, format="png")
-                img_buffer_femmes.seek(0)
-                img_femmes = XLImage(img_buffer_femmes)
-                sheet.add_image(img_femmes, 'M28') 
+
+
+                                                # Graphique 5
+                img_buffer5 = BytesIO()
+                fig5.write_image(img_buffer5, format="png")
+                img_buffer5.seek(0)
+                img5 = XLImage(img_buffer5)
+                sheet.add_image(img5, 'M48') 
+
+
+
+
+                                # Graphique 6
+                img_buffer6 = BytesIO()
+                fig6.write_image(img_buffer6, format="png")
+                img_buffer6.seek(0)
+                img6 = XLImage(img_buffer6)
+                sheet.add_image(img6, 'M20') 
+
+                # img_buffer_femmes = BytesIO()
+                # fig_femmes.write_image(img_buffer_femmes, format="png")
+                # img_buffer_femmes.seek(0)
+                # img_femmes = XLImage(img_buffer_femmes)
+                # sheet.add_image(img_femmes, 'M28') 
 
             st.download_button(
                 label="📥 Télécharger le fichier Excel",
