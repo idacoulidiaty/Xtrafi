@@ -1,4 +1,5 @@
 import pandas as pd
+import streamlit as st
 
 def style_kpi(df: pd.DataFrame):
     df = df.copy()
@@ -87,3 +88,10 @@ def style_kpi(df: pd.DataFrame):
         style = style.applymap(lambda v: 'background-color: lemonchiffon', subset=["VARIATION Objectifs Stratégiques PLAFOND N vs Réel N (%)"])
 
     return style
+
+
+
+
+def load_css(file_path):
+    with open(file_path) as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)

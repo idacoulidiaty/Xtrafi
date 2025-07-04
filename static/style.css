@@ -1,0 +1,70 @@
+/* styles.css */
+section[data-testid="stSidebar"] {
+    background-color: #0b1f3a;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100vh;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+section[data-testid="stSidebar"] * {
+    color: white !important;
+}
+section[data-testid="stSidebar"] .st-emotion-cache-taue2i {
+    background-color: #112d50 !important;
+    color: white !important;
+    border-radius: 10px;
+    padding: 1rem;
+}
+section[data-testid="stSidebar"] .stFileUploader button {
+    background-color: #19549d !important;
+    color: white !important;
+    font-weight: bold;
+    border: none;
+    border-radius: 6px;
+    padding: 0.4rem 1rem;
+}
+section[data-testid="stSidebar"] div[data-baseweb="select"] > div {
+    background-color: #0b1f3a !important;
+    color: white !important;
+    border-radius: 6px !important;
+    font-weight: bold;
+}
+div[role="listbox"] {
+    background-color: #0b1f3a !important;
+    color: white !important;
+    border-radius: 6px;
+}
+div[role="option"] {
+    background-color: #0b1f3a !important;
+    color: white !important;
+}
+div[role="option"]:hover {
+    background-color: #133456 !important;
+}
+.st-emotion-cache-1kyxreq, .st-emotion-cache-16txtl3 {
+    background-color: transparent !important;
+    padding: 0 !important;
+}
+.main > div > div > div > h1 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: #0b1f3a;
+}
+section[data-testid="stSidebar"] button[kind="secondary"], 
+section[data-testid="stSidebar"] button {
+    background-color: #0b1f3a !important;
+    color: white !important;
+    font-weight: bold !important;
+    border-radius: 6px !important;
+    padding: 0.5rem 1rem !important;
+    width: 100% !important;
+    cursor: pointer;
+    border: none !important;
+    margin-top: 1rem;
+    transition: background-color 0.3s ease;
+}
+section[data-testid="stSidebar"] button:hover {
+    background-color: #133456 !important;
+}

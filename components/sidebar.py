@@ -3,11 +3,7 @@ import os
 from config import WATCHED_FOLDER, LOGO_PATH
 from data_loader import get_latest_excel_file
 
-def sidebar_file_selection():
-
-    # ✅ Logo tout en haut de la sidebar
-    st.sidebar.image(LOGO_PATH, use_container_width=True)
-    st.sidebar.markdown("<div style='margin-top: 40px;'></div>", unsafe_allow_html=True)
+def sidebar_file_selection(name=None, authenticator=None):
 
     st.sidebar.header("📁 Importer un fichier")
     uploaded_file = st.sidebar.file_uploader("Téléversez un fichier Excel", type=["xlsx", "xls"])
@@ -23,6 +19,8 @@ def sidebar_file_selection():
             options=watched_files,
             index=watched_files.index(default_file) if default_file in watched_files else 0
         )
+
+
 
     return uploaded_file, selected_file
 

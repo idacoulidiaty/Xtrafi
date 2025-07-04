@@ -71,7 +71,3 @@ def bar_comparatif(df, col_x, col_y_n1, col_y_n, label_x="Indicateur", label_y="
     return fig
 
 
-def export_plot_button(fig, filename="graphique.png", label="📥 Exporter"):
-    if st.button(label):
-        fig.write_image(filename)
-        st.success(f"{filename} exporté avec succès.")
