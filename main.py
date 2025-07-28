@@ -1,7 +1,7 @@
 import streamlit as st
 # ------------------ ⚙️ CONFIG PAGE ------------------
-st.set_page_config(page_title="Xtrafi Data Viz", layout="wide")
 from app import run_app
+st.set_page_config(page_title="Xtrafi Data Viz", layout="wide")
 
 
 import uuid
