@@ -4,12 +4,13 @@ from authentification.auth import *
 from utils.styles import load_css
 
 
+# ------------------ ⚙️ CONFIG PAGE ------------------
+st.set_page_config(page_title="Xtrafi Data Viz", layout="wide")
+
 # ------------------ 🎨 STYLES CSS ------------------
 css_path = "static/style.css"
 load_css(css_path)
 
-# ------------------ ⚙️ CONFIG PAGE ------------------
-st.set_page_config(page_title="Xtrafi Data Viz", layout="wide")
 
 # ------------------ 🔄 DÉCONNEXION GÉRÉE PROPREMENT ------------------
 if st.session_state.get("logout_triggered"):
