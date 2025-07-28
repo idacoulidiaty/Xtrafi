@@ -1,11 +1,14 @@
 import streamlit as st
+# ------------------ ⚙️ CONFIG PAGE ------------------
+st.set_page_config(page_title="Xtrafi Data Viz", layout="wide")
+
+
 import uuid
 from authentification.auth import *
 from utils.styles import load_css
 
 
-# ------------------ ⚙️ CONFIG PAGE ------------------
-st.set_page_config(page_title="Xtrafi Data Viz", layout="wide")
+
 
 # ------------------ 🎨 STYLES CSS ------------------
 css_path = "static/style.css"
