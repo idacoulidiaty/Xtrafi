@@ -1,6 +1,7 @@
 import streamlit as st
 # ------------------ ⚙️ CONFIG PAGE ------------------
 st.set_page_config(page_title="Xtrafi Data Viz", layout="wide")
+from app import run_app
 
 
 import uuid
@@ -61,8 +62,6 @@ elif authentication_status is True:
             from authentification.admin_tools import run_admin_panel
             run_admin_panel(username, authenticator, name)
         else:
-            from app import run_app
             run_app(name, authenticator)
     else:
-        from app import run_app
         run_app(name, authenticator)
