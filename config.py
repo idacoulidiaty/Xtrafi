@@ -4,3 +4,8 @@ WATCHED_FOLDER = "data"
 
 # Chemin du logo
 LOGO_PATH = "static/logo-xtrafi.png"
+
+# N om des ctaégories de données
+onglet_1= "Paramètres restit."
+onglet_2= "Restit Brute (Total Répdts)"
+onglet_3= "Restit Rapport (Total Répdts)"

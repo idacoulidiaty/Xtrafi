@@ -1,6 +1,6 @@
 import streamlit as st
 import uuid
-from authentification.auth import init_authenticator, login_interface, changer_mot_de_passe_utilisateur
+from authentification.auth import *
 from utils.styles import load_css
 
 
@@ -23,7 +23,6 @@ if "page" not in st.session_state:
 
 # Redirection vers la page de changement de mot de passe
 if st.session_state.page == "change_password":
-    from authentification.auth import changer_mot_de_passe_utilisateur
     changer_mot_de_passe_utilisateur()
     st.stop()
 
@@ -59,7 +58,7 @@ elif authentication_status is True:
             run_admin_panel(username, authenticator, name)
         else:
             from app import run_app
-            run_app(name, username, authenticator)
+            run_app(name, authenticator)
     else:
         from app import run_app
-        run_app(name, username, authenticator)
+        run_app(name, authenticator)

@@ -86,3 +86,4 @@ yarg==0.1.9
 python-calamine==0.3.2 
 xlrd==2.0.1 
 streamlit-authenticator==0.4.2
+passlib==1.7.4

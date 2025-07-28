@@ -1,5 +1,5 @@
 cookie:
-  expiry_days: 30
+  expiry_days: 1
   key: supersecretkey123
   name: xtrafi_auth
 credentials:
@@ -8,37 +8,39 @@ credentials:
     admin:
       first_name: Administrateur
       last_name: Xtrafi
-      password: $2b$12$K00VvM58.C/xV/fJJmQejejfayLkdDPtSnQE076a4mF/mq8UXaVY6
+      password: admin
       roles:
       - admin
     idacoul:
       name: Ida COULIDATY
       organizations:
       - orga 1
-      - orga  2
-      password: $2b$12$DcpnrPj1hPUb9Wxp.PCbeub8MdGs/qQmsoG8kuQPWAhWK3StsFbJa
+      - orga 2
+      password: idacoul
       roles:
       - user
       - admin
-    idacoul22:
-      name: Ida COULIDATYyyyyyy
+    fperdrix:
+      name: Franck PERDRIX
       organizations:
       - orga 1
-      - orga  2
-      password: $2b$12$awq9CbY0m0A3yn47y9rJ/ukLOUl5r2PkkImmFNut2YzObZ20o703y
+      - orga 2
+      password: fperdrix
       roles:
       - viewer
-    idacoul271196:
-      name: Ida COULIDATYoo
-      organizations:
-      - orga 1
-      - orga  2
-      password: $2b$12$IrAGSxURvzjMLm.PYENCwe1FliY7aHSJeYdbSOKTQjjDOUN7kyxbC
-      roles:
       - admin
-    user1:
-      name: ''
-      organizations: []
-      password: $2b$12$ALRhd9.csR1yfMMF.jfqSem3YmzzqHPhX4ma2bjFPI6YPoj1aJUCm
+      - user
+    fp_rpdt01:
+      name: Franck PERDRIX
+      organizations:
+      - orga 1
+      password: fp_rpdt01
       roles:
-      - viewer
+      - user
+    rpdt_02:
+      name: Répondant 02
+      organizations:
+      - orga3
+      password: rpdt_02
+      roles:
+      - user

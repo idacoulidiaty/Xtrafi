@@ -3,7 +3,7 @@ import os
 from config import WATCHED_FOLDER, LOGO_PATH
 from data_loader import get_latest_excel_file
 
-def sidebar_file_selection(name=None, authenticator=None):
+def sidebar_file_selection():
 
     st.sidebar.header("📁 Importer un fichier")
     uploaded_file = st.sidebar.file_uploader("Téléversez un fichier Excel", type=["xlsx", "xls"])

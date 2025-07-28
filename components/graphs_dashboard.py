@@ -1,333 +1,159 @@
 import streamlit as st
-import numpy as np
-import pandas as pd
-from components.tab_graphs import add_horizontal_line, bar_comparatif
 import plotly.graph_objects as go
-
-def afficher_graphique_eau(df_onglet_2):
-    # Filtrer indicateurs eau consommée
-    df_eau = df_onglet_2[df_onglet_2['Nom Ind.N2\nAPP'].str.contains("eau consommée", case=False, na=False)]
-    if df_eau.empty:
-        st.warning("⚠️ Données eau consommée manquantes")
-        return
-    
-    st.subheader("Total consommation d'eau N-1 vs N")
-
-    # Préparer la figure via bar_comparatif
-    fig = bar_comparatif(
-        df=df_eau,
-        col_x='Nom Ind.N2\nAPP',
-        col_y_n1='Total\nMontant\nCollecte\nRéelle\nExercice N-1',
-        col_y_n='Total\nMontant\nCollecte\nRéelle\nExercice N',
-        label_x="Indicateurs Eau",
-        label_y="Volume (Litres)"
-    )
-
-    # Moyennes objectifs strat/opér pour lignes horizontales
-    plafond_strat = np.nanmean(df_eau['Total\nMontant\nCollecte\nO.Strat Plafond\nExercice N'])
-    plancher_strat = np.nanmean(df_eau['Total\nMontant\nCollecte\nO.Strat Plancher\nExercice N'])
-    plafond_oper = np.nanmean(df_eau['Total\nMontant\nCollecte\nO.Opér.Plafond\nExercice N'])
-    plancher_oper = np.nanmean(df_eau['Total\nMontant\nCollecte\nO.Opér.Plancher\nExercice N'])
-
-    options_obj = st.multiselect(
-        "🎯 Objectifs à afficher sur le graphique Eau",
-        options=["Stratégique - Plafond", "Stratégique - Plancher", "Opérationnel - Plafond", "Opérationnel - Plancher"],
-        default=[],
-        key="multiselect_obj_eau"
-    )
-
-    if "Stratégique - Plafond" in options_obj:
-        add_horizontal_line(fig, plafond_strat, "Obj. Strat. plafond moyen", "green", "dash", x_start=-0.5, x_end=len(df_eau)-0.5)
-    if "Stratégique - Plancher" in options_obj:
-        add_horizontal_line(fig, plancher_strat, "Obj. Strat. plancher moyen", "green", "dot", x_start=-0.5, x_end=len(df_eau)-0.5)
-    if "Opérationnel - Plafond" in options_obj:
-        add_horizontal_line(fig, plafond_oper, "Obj. Opé. plafond moyen", "orange", "dash", x_start=-0.5, x_end=len(df_eau)-0.5)
-    if "Opérationnel - Plancher" in options_obj:
-        add_horizontal_line(fig, plancher_oper, "Obj. Opé. plancher moyen", "orange", "dot", x_start=-0.5, x_end=len(df_eau)-0.5)
-
-    fig.update_layout(
-        title="Total consommation d'eau N-1 vs N",
-        barmode='group',
-        xaxis_title="Indicateurs Eau",
-        yaxis_title="Volume (Litres)",
-        template='plotly_white',
-        height=500,
-        bargap=0.2
-
-    )  
-    st.plotly_chart(fig, use_container_width=True)
-    return fig
+import pandas as pd
+from utils.styles import style_objectifs  
+from preprocessing import filter_and_rename_columns, compute_variations
 
 
-def afficher_graphique_carburant(df_onglet_2):
-    # Filtrer indicateurs carburant
-    carburant_list = [
-        "Consommation totale de carburant véhicule",
-        "Consommation diesel des véhicules",
-        "Consommation Essence/Super des véhicules"
-    ]
-    df_carburant = df_onglet_2[df_onglet_2['Nom Ind.N2\nAPP'].isin(carburant_list)]
-    
+import re
 
-    if df_carburant.empty:
-        st.warning("⚠️ Données carburant manquantes")
-        return
-    
-    st.subheader("Consommations carburant véhicules")
-    st.subheader("\n")
+def safe_key(name):
+    return re.sub(r'\W+', '_', name)
 
-    # Préparer la figure
-    df_carburant['Nom Ind.N2\nAPP'] = df_carburant['Nom Ind.N2\nAPP'].apply(
-    lambda x: x.replace("Consommation totale de carburant véhicule", "Consommation totale<br>carburant véhicule")
-             .replace("Consommation diesel des véhicules", "Consommation <br>diesel des véhicules")
-             .replace("Consommation Essence/Super des véhicules", "Consommation Essence<br>/Super des véhicules")
-)
-    fig = bar_comparatif(
-        df=df_carburant,
-        col_x='Nom Ind.N2\nAPP',
-        col_y_n1='Total\nMontant\nCollecte\nRéelle\nExercice N-1',
-        col_y_n='Total\nMontant\nCollecte\nRéelle\nExercice N',
-        label_x="Indicateurs Carburant",
-        label_y="Volume (Litres)"
-    )
+def format_montant(valeur, monnaie):
+    return f"{int(valeur):,}".replace(",", " ") + f" {monnaie}"
 
-    # Moyennes objectifs
-    plafond_strat = np.nanmean(df_carburant['Total\nMontant\nCollecte\nO.Strat Plafond\nExercice N'])
-    plancher_strat = np.nanmean(df_carburant['Total\nMontant\nCollecte\nO.Strat Plancher\nExercice N'])
-    plafond_oper = np.nanmean(df_carburant['Total\nMontant\nCollecte\nO.Opér.Plafond\nExercice N'])
-    plancher_oper = np.nanmean(df_carburant['Total\nMontant\nCollecte\nO.Opér.Plancher\nExercice N'])
-
-    options_obj = st.multiselect(
-        "🎯 Objectifs à afficher sur le graphique Carburant",
-        options=["Stratégique - Plafond", "Stratégique - Plancher", "Opérationnel - Plafond", "Opérationnel - Plancher"],
-        default=[],
-        key="multiselect_obj_carburant"
-    )
-
-    if "Stratégique - Plafond" in options_obj:
-        add_horizontal_line(fig, plafond_strat, "Obj. Strat. plafond moyen", "green", "dash", x_start=-0.5, x_end=len(df_carburant)-0.5)
-    if "Stratégique - Plancher" in options_obj:
-        add_horizontal_line(fig, plancher_strat, "Obj. Strat. plancher moyen", "green", "dot", x_start=-0.5, x_end=len(df_carburant)-0.5)
-    if "Opérationnel - Plafond" in options_obj:
-        add_horizontal_line(fig, plafond_oper, "Obj. Opé. plafond moyen", "orange", "dash", x_start=-0.5, x_end=len(df_carburant)-0.5)
-    if "Opérationnel - Plancher" in options_obj:
-        add_horizontal_line(fig, plancher_oper, "Obj. Opé. plancher moyen", "orange", "dot", x_start=-0.5, x_end=len(df_carburant)-0.5)
-
-    fig.update_layout(
-     title = "Consommations carburant véhicules",
-        xaxis=dict(
-        title="Indicateurs Carburant",
-        title_font=dict(size=16),
-        tickangle=0, 
-        automargin=True),
-     template='plotly_white',
-     height=500,
-     bargap=0.2,
-     barmode = 'group',
-
-    )
-
-    st.plotly_chart(fig, use_container_width=True)
-    return fig
+def custom_metric(label, value, fontsize=20):
+    st.markdown(f"""
+        <div style="padding: 0.5em 1em; border: 1px solid #ccc; border-radius: 8px; background-color: #f9f9f9;">
+            <div style="font-size: 0.9em; color: #888;">{label}</div>
+            <div style="font-size: {fontsize}px; font-weight: bold;">{value}</div>
+        </div>
+    """, unsafe_allow_html=True)
 
 
-def afficher_graphique_rgaes(df_onglet_2):
-    # Filtrer indicateurs RGAES
-    rgaes_list = [
-        "Rejets de gaz à effets de serre (RGAES)",
-        "RGAES hors production éléctrique"
-    ]
-    df_rgaes = df_onglet_2[df_onglet_2['Nom Ind.N2\nAPP'].isin(rgaes_list)].copy()
+def generate_graphs_par_indicateur_en_colonnes(
+    df,
+    col_indicateur,
+    col_val_n1,
+    col_val_n,
+    colonnes_objectifs=None,
+    n_cols=2
+):
+    import streamlit as st
+    import pandas as pd
+    import plotly.graph_objects as go
+    from utils.styles import style_objectifs
 
-    if df_rgaes.empty:
-        st.warning("⚠️ Données RGAES manquantes")
-        return
+    noms_objectifs_lisibles = {
+        'Total\nMontant\nCollecte\nO.Strat Plafond\nExercice N': 'Obj. Strat. PLAFOND N',
+        'Total\nMontant\nCollecte\nO.Strat Plancher\nExercice N': 'Obj. Strat. SEUIL N',
+        'Total\nMontant\nCollecte\nO.Opér.Plafond\nExercice N': 'Obj. Opé. PLAFOND N',
+        'Total\nMontant\nCollecte\nO.Opér.Plancher\nExercice N': 'Obj. Opé. SEUIL N'
+    }
 
-    # Remplacer certains textes par des versions avec <br> pour les sauts de ligne dans les labels
-    df_rgaes['Nom Ind.N2\nAPP'] = df_rgaes['Nom Ind.N2\nAPP'].apply(
-        lambda x: x.replace("Rejets de gaz à effets de serre (RGAES)", "Rejets de gaz à effets<br>de serre (RGAES)")
-                    .replace ("RGAES hors production éléctrique", "RGAES hors production<br>éléctrique")
-    )
+    indicateurs = df[col_indicateur].dropna().unique()
+    cols = st.columns(n_cols)
+    figs = []
+    fig_infos = []
 
-    st.subheader("Rejets Gaz à Effet de Serre N-1 vs N")
+    for i, indicateur in enumerate(indicateurs):
+        df_indic = df[df[col_indicateur] == indicateur]
+        df_indic = compute_variations(df_indic, col_reel_n=col_val_n, col_reel_n1=col_val_n1)
 
-    # Préparer la figure
-    fig = bar_comparatif(
-        df=df_rgaes,
-        col_x='Nom Ind.N2\nAPP',
-        col_y_n1='Total\nMontant\nCollecte\nRéelle\nExercice N-1',
-        col_y_n='Total\nMontant\nCollecte\nRéelle\nExercice N',
-        label_x="Indicateurs RGAES",
-        label_y="Valeur"
-    )
+        val_n1 = df_indic[col_val_n1].values[0] if col_val_n1 in df_indic else None
+        val_n = df_indic[col_val_n].values[0] if col_val_n in df_indic else None
 
-    # Moyennes objectifs
-    plafond_strat = np.nanmean(df_rgaes['Total\nMontant\nCollecte\nO.Strat Plafond\nExercice N'])
-    plancher_strat = np.nanmean(df_rgaes['Total\nMontant\nCollecte\nO.Strat Plancher\nExercice N'])
-    plafond_oper = np.nanmean(df_rgaes['Total\nMontant\nCollecte\nO.Opér.Plafond\nExercice N'])
-    plancher_oper = np.nanmean(df_rgaes['Total\nMontant\nCollecte\nO.Opér.Plancher\nExercice N'])
+        unite = df_indic["Unité\nconversion"].values[0] if "Unité\nconversion" in df_indic else ""
+        monnaie = df_indic["Monnaie\nlocale"].values[0] if "Monnaie\nlocale" in df_indic else ""
+        valo_fi_n1 = df_indic['Total\nValo. Financière\nCollecte Réelle\nExercice N-1'].values[0] if 'Total\nValo. Financière\nCollecte Réelle\nExercice N-1' in df_indic else None
+        valo_fi_n = df_indic['Total\nValo. Financière\nCollecte Réelle\nExercice N'].values[0] if 'Total\nValo. Financière\nCollecte Réelle\nExercice N' in df_indic else None
 
-    options_obj = st.multiselect(
-        "🎯 Objectifs à afficher sur le graphique RGAES",
-        options=["Stratégique - Plafond", "Stratégique - Plancher", "Opérationnel - Plafond", "Opérationnel - Plancher"],
-        default=[],
-        key="multiselect_obj_rgaes"
-    )
+        objectifs_disponibles = []
+        for col in (colonnes_objectifs or []):
+            if col in df.columns:
+                serie = df_indic[col]
+                if not serie.dropna().empty:
+                    objectifs_disponibles.append(col)
 
-    if "Stratégique - Plafond" in options_obj:
-        add_horizontal_line(fig, plafond_strat, "Obj. Strat. plafond moyen", "green", "dash", x_start=-0.5, x_end=len(df_rgaes)-0.5)
-    if "Stratégique - Plancher" in options_obj:
-        add_horizontal_line(fig, plancher_strat, "Obj. Strat. plancher moyen", "green", "dot", x_start=-0.5, x_end=len(df_rgaes)-0.5)
-    if "Opérationnel - Plafond" in options_obj:
-        add_horizontal_line(fig, plafond_oper, "Obj. Opé. plafond moyen", "orange", "dash", x_start=-0.5, x_end=len(df_rgaes)-0.5)
-    if "Opérationnel - Plancher" in options_obj:
-        add_horizontal_line(fig, plancher_oper, "Obj. Opé. plancher moyen", "orange", "dot", x_start=-0.5, x_end=len(df_rgaes)-0.5)
-
-    fig.update_layout(
-        title="Rejets Gaz à Effet de Serre N-1 vs N",
-        xaxis=dict(
-            title="Indicateurs Carburant",
-            title_font=dict(size=16),
-            tickangle=0, 
-            automargin=True
-        ),
-        template='plotly_white',
-        height=500,
-        bargap=0.2,
-        barmode='group'
-    )
-
-    st.plotly_chart(fig, use_container_width=True)
-    return fig
+        col_ui = cols[i % n_cols]
 
 
+        labels_disponibles = [noms_objectifs_lisibles.get(col, col) for col in objectifs_disponibles]
+
+        selected_labels = col_ui.multiselect(
+            f"🎯 Afficher les objectifs pour « {indicateur} »",
+            options=labels_disponibles
+        )
 
 
+        selected_objectifs = [
+            col for col, label in noms_objectifs_lisibles.items()
+            if label in selected_labels
+        ]
 
-def afficher_graphique_eau_stockee(df_onglet_2):
-    # Filtrer la ligne "eau stockée"
-    stock = df_onglet_2[df_onglet_2['Nom Ind.N2\nAPP'].str.contains("eau stockée", case=False, na=False)]
-    if stock.empty:
-        st.warning("⚠️ Donnée manquante pour l’eau stockée.")
-        return
+        with col_ui.expander(f"📊 {indicateur} (en {unite})", expanded=True):
+            fig = go.Figure()
+            fig.add_bar(x=[0], y=[val_n1], name="Exercice N-1", marker_color="lightblue", width=0.07)
+            fig.add_bar(x=[0.10], y=[val_n], name="Exercice N", marker_color="midnightblue", width=0.07)
+            fig.update_layout(
+                title=f"{indicateur}",
+                barmode="group",
+                bargap=0.01,
+                height=500,
+                xaxis=dict(
+                    tickmode="array",
+                    tickvals=[0, 0.10],
+                    ticktext=["N-1", "N"],
+                    showticklabels=True,
+                    range=[-0.1, 0.4]
+                )
+            )
+            for obj_col in selected_objectifs:
+                val_obj = df_indic[obj_col].values[0]
+                if pd.notna(val_obj):
+                    style = style_objectifs.get(obj_col, {"line_color": "red", "line_dash": "dot"})
+                    fig.add_hline(
+                        y=val_obj,
+                        line_dash=style["line_dash"],
+                        line_color=style["line_color"],
+                        annotation_text=f"{noms_objectifs_lisibles.get(obj_col, obj_col)} = {val_obj:,.2f}",
+                        annotation_position="top right"
+                    )
 
-    st.subheader("% Eau stockée N-1 vs N")
+            text_lines = []
 
-    valeur_n1 = pd.to_numeric(stock['Total\nMontant\nCollecte\nRéelle\nExercice N-1'].values[0], errors="coerce")
-    valeur_n = pd.to_numeric(stock['Total\nMontant\nCollecte\nRéelle\nExercice N'].values[0], errors="coerce")
+            if pd.notna(valo_fi_n1):
+                text_lines.append(f"Valo. N-1 : {int(valo_fi_n1):,} {monnaie}".replace(",", " "))
+            if pd.notna(valo_fi_n):
+                text_lines.append(f"Valo. N : {int(valo_fi_n):,} {monnaie}".replace(",", " "))
 
-    if pd.isnull(valeur_n1) or pd.isnull(valeur_n):
-        st.warning("❌ Données non valides pour les montants Exercice N-1 ou N.")
-        return
+            for obj_col in selected_objectifs:
+                var_colname = f"VARIATION {obj_col} vs Réel N (%)"
+                if var_colname in df_indic.columns:
+                    variation = df_indic[var_colname].values[0]
+                    if pd.notna(variation):
+                        couleur = "🟢" if variation < 0 else "🔴"
+                        fleche = "⬇️" if variation < 0 else "⬆️"
+                        label = noms_objectifs_lisibles.get(obj_col, obj_col)
+                        text_lines.append(f"{label} : {fleche} {variation:.1f}% {couleur}")
 
-    # Créer un petit DataFrame pour bar_comparatif
-    df_temp = pd.DataFrame({
-        "Indicateur": ["% Eau stockée"],
-        "N-1": [valeur_n1],
-        "N": [valeur_n]
-    })
+            if text_lines:
+                fig.add_annotation(
+                    text="<br>".join(text_lines),
+                    xref="paper", yref="paper",
+                    x=1.22, y=0.4,
+                    showarrow=False,
+                    align="left",
+                    font=dict(size=13, color="black"),
+                    bgcolor="#f5f5f5",
+                    bordercolor="gray",
+                    borderwidth=1,
+                    borderpad=6
+                )
 
-    # Générer la figure
-    fig = bar_comparatif(
-        df=df_temp,
-        col_x="Indicateur",
-        col_y_n1="N-1",
-        col_y_n="N",
-        label_x="",
-        label_y="Pourcentage"
-    )
+            st.plotly_chart(fig, use_container_width=True, key=f"plot_{safe_key(indicateur)}")
 
-    # Ajouter les lignes d’objectif
-    plafond_strat = pd.to_numeric(stock['Total\nMontant\nCollecte\nO.Strat Plafond\nExercice N'].values[0], errors="coerce")
-    plancher_strat = pd.to_numeric(stock['Total\nMontant\nCollecte\nO.Strat Plancher\nExercice N'].values[0], errors="coerce")
-    plafond_oper = pd.to_numeric(stock['Total\nMontant\nCollecte\nO.Opér.Plafond\nExercice N'].values[0], errors="coerce")
-    plancher_oper = pd.to_numeric(stock['Total\nMontant\nCollecte\nO.Opér.Plancher\nExercice N'].values[0], errors="coerce")
+        figs.append(fig)
+        fig_infos.append({
+            "indicateur": indicateur,
+            "val_n1": val_n1,
+            "val_n": val_n,
+            "objectifs": {
+                obj: df_indic[obj].values[0]
+                for obj in selected_objectifs
+                if obj in df_indic.columns and pd.notna(df_indic[obj].values[0])
+            }
+        })
 
-    options_obj = st.multiselect(
-        "🎯 Objectifs à afficher",
-        options=[
-            "Stratégique - Plafond",
-            "Stratégique - Plancher",
-            "Opérationnel - Plafond",
-            "Opérationnel - Plancher"
-        ],
-        default=[],
-        key="multiselect_obj_stockee"
-    )
-
-    if "Stratégique - Plafond" in options_obj:
-        add_horizontal_line(fig, plafond_strat, "Obj. Strat. plafond", "green", "dash", x_start=-0.5, x_end=0.5)
-    if "Stratégique - Plancher" in options_obj:
-        add_horizontal_line(fig, plancher_strat, "Obj. Strat. plancher", "green", "dot", x_start=-0.5, x_end=0.5)
-    if "Opérationnel - Plafond" in options_obj:
-        add_horizontal_line(fig, plafond_oper, "Obj. Opé. plafond", "orange", "dash", x_start=-0.5, x_end=0.5)
-    if "Opérationnel - Plancher" in options_obj:
-        add_horizontal_line(fig, plancher_oper, "Obj. Opé. plancher", "orange", "dot", x_start=-0.5, x_end=0.5)
-
-    fig.update_layout(
-        title="% Eau stockée N-1 vs N",
-        yaxis=dict(range=[0, 100]),
-        height=500,
-        bargap=0.2
-    )
-
-    st.plotly_chart(fig, use_container_width=True)
-    return fig
-
-
-
-
-
-def afficher_graphique_consommation_eau(df_onglet_2):
-    indicateurs_eau = df_onglet_2[df_onglet_2['Nom Ind.N2\nAPP'].str.contains("consommation d'eau", case=False, na=False)]
-    if indicateurs_eau.empty:
-        st.warning("⚠️ Données consommation d'eau manquantes")
-        return
-    
-    indicateurs_eau['Nom Ind.N2\nAPP'] = indicateurs_eau['Nom Ind.N2\nAPP'].apply(
-        lambda x: x.replace("Consommation d'eau des sièges, agences, bureaux", "Consommation d'eau des sièges,<br>agences, bureaux" )
-    )
-    st.subheader("Consommation d'eau des sièges, agences, bureaux VS Consommation totale d'eau")
-
-    # Appel direct à bar_comparatif
-    fig = bar_comparatif(
-        df=indicateurs_eau,
-        col_x='Nom Ind.N2\nAPP',
-        col_y_n1='Total\nMontant\nCollecte\nRéelle\nExercice N-1',
-        col_y_n='Total\nMontant\nCollecte\nRéelle\nExercice N',
-        label_x="Indicateurs Eau",
-        label_y="Volume (Litres)"
-    )
-
-    # Moyennes objectifs
-    plafond_strat = np.nanmean(indicateurs_eau['Total\nMontant\nCollecte\nO.Strat Plafond\nExercice N'])
-    plancher_strat = np.nanmean(indicateurs_eau['Total\nMontant\nCollecte\nO.Strat Plancher\nExercice N'])
-    plafond_oper = np.nanmean(indicateurs_eau['Total\nMontant\nCollecte\nO.Opér.Plafond\nExercice N'])
-    plancher_oper = np.nanmean(indicateurs_eau['Total\nMontant\nCollecte\nO.Opér.Plancher\nExercice N'])
-
-    options_obj = st.multiselect(
-        "🎯 Objectifs à afficher",
-        options=["Stratégique - Plafond", "Stratégique - Plancher", "Opérationnel - Plafond", "Opérationnel - Plancher"],
-        default=[],
-        key="multiselect_objectifs_consommation_eau"
-    )
-
-    if "Stratégique - Plafond" in options_obj:
-        add_horizontal_line(fig, plafond_strat, "Obj. Strat. plafond moyen", "green", "dash")
-    if "Stratégique - Plancher" in options_obj:
-        add_horizontal_line(fig, plancher_strat, "Obj. Strat. plancher moyen", "green", "dot")
-    if "Opérationnel - Plafond" in options_obj:
-        add_horizontal_line(fig, plafond_oper, "Obj. Opé. plafond moyen", "orange", "dash")
-    if "Opérationnel - Plancher" in options_obj:
-        add_horizontal_line(fig, plancher_oper, "Obj. Opé. plancher moyen", "orange", "dot")
-
-    st.markdown("ℹ️ Vous pouvez sélectionner un ou plusieurs types d’objectifs à afficher sur le graphique.")
-
-    fig.update_layout(
-        title="Consommation d'eau des sièges, agences, bureaux VS Consommation totale d'eau",
-        height=500
-    )
-
-    st.plotly_chart(fig, use_container_width=True)
-    return fig
-
+    return figs, fig_infos
