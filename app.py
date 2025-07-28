@@ -1,10 +1,11 @@
+# -------------------- CONFIG PAGE (doit venir TOUT EN PREMIER) --------------------
+import streamlit as st
+st.set_page_config(page_title="Xtrafi Data Viz", layout="wide")
+
+# -------------------- AUTRES IMPORTS --------------------
 import os
 import uuid
 import pandas as pd
-import streamlit as st                 # ← un seul import suffit
-
-# -------------------- CONFIG PAGE --------------------
-st.set_page_config(page_title="Xtrafi Data Viz", layout="wide")
 
 # -------------------- IMPORTS MAISON -----------------
 from config import WATCHED_FOLDER, LOGO_PATH
