@@ -1,11 +1,10 @@
 import pandas as pd
 import re
+import streamlit as st
 
 def filter_and_rename_columns(df):
-    df = df[[
+    required_columns = [
         'Axe',
-        # 'Code\nRAPPORT Ind.\nVIRTUEL',
-        # 'Nom\nRAPPORT Ind.\nVIRTUEL',
         'Code\nREPORTING\nInd. VIRTUEL',
         'Nom\nREPORTING Ind.\nVIRTUEL',
         'Code\nAPP Indicateur\nVIRTUEL',
@@ -21,27 +20,43 @@ def filter_and_rename_columns(df):
         'Total\nMontant\nCollecte\nO.Opér.Plafond\nExercice N',
         'Total\nMontant\nCollecte\nO.Opér.Plancher\nExercice N',
         'Total\nValo. Financière\nCollecte\nO.Opér.\nExercice N'
-    ]]
+    ]
 
-    df = df.rename(columns={
-        'Code\nREPORTING\nInd. VIRTUEL': 'Code Reporting',
-        'Nom\nREPORTING Ind.\nVIRTUEL': 'Nom Reporting',
-        'Nom\nAPP Indicateur\nVIRTUEL': 'Nom indicateur Virtuel',
-        "Unité de conversion\n(de l'indicateur virtuel)": "Unité de conversion de l'indicateur",
-        'Total\nMontant\nCollecte\nRéelle\nExercice N-1': 'Reel N-1',
-        'Total\nValo. Financière\nCollecte Réelle\nExercice N-1': 'Valorisation Financière REEL N-1',
-        'Total\nMontant\nCollecte\nRéelle\nExercice N': 'Reel N',
-        'Total\nValo. Financière\nCollecte Réelle\nExercice N': 'Valorisation Financière REEL N',
-        'Total\nMontant\nCollecte\nO.Strat Plafond\nExercice N': 'Objectifs Stratégiques PLAFOND période N',
-        'Total\nMontant\nCollecte\nO.Strat Plancher\nExercice N': 'Objectifs Stratégiques SEUIL période N',
-        'Total\nValo. Financière\nCollecte\nO.Strat\nExercice N': 'Valorisation Financière Objectifs Stratégiques N',
-        'Total\nMontant\nCollecte\nO.Opér.Plafond\nExercice N': 'Objectifs Opérationnels PLAFOND période N',
-        'Total\nMontant\nCollecte\nO.Opér.Plancher\nExercice N': 'Objectifs Opérationnels SEUIL période N',
-        'Total\nValo. Financière\nCollecte\nO.Opér.\nExercice N': 'Valorisation Financière Objectifs Opérationnels N'
-    })
+    try:
+        missing_cols = [col for col in required_columns if col not in df.columns]
+        if missing_cols:
+            st.error(
+                f"❌ Le fichier est obsolète : il manque les colonnes suivantes :\n- " +
+                "\n- ".join(missing_cols) +
+                "\n\nVeuillez importer un fichier à jour généré par Xtrafi App."
+                )           
+            st.stop()
 
-    return df
+        df = df[required_columns]
 
+        df = df.rename(columns={
+            'Code\nREPORTING\nInd. VIRTUEL': 'Code Reporting',
+            'Nom\nREPORTING Ind.\nVIRTUEL': 'Nom Reporting',
+            'Code\nAPP Indicateur\nVIRTUEL': 'Code indicateur Virtuel',
+            'Nom\nAPP Indicateur\nVIRTUEL': 'Nom indicateur Virtuel',
+            "Unité de conversion\n(de l'indicateur virtuel)": "Unité de conversion de l'indicateur",
+            'Total\nMontant\nCollecte\nRéelle\nExercice N-1': 'Reel N-1',
+            'Total\nValo. Financière\nCollecte Réelle\nExercice N-1': 'Valorisation Financière REEL N-1',
+            'Total\nMontant\nCollecte\nRéelle\nExercice N': 'Reel N',
+            'Total\nValo. Financière\nCollecte Réelle\nExercice N': 'Valorisation Financière REEL N',
+            'Total\nMontant\nCollecte\nO.Strat Plafond\nExercice N': 'Objectifs Stratégiques PLAFOND période N',
+            'Total\nMontant\nCollecte\nO.Strat Plancher\nExercice N': 'Objectifs Stratégiques SEUIL période N',
+            'Total\nValo. Financière\nCollecte\nO.Strat\nExercice N': 'Valorisation Financière Objectifs Stratégiques N',
+            'Total\nMontant\nCollecte\nO.Opér.Plafond\nExercice N': 'Objectifs Opérationnels PLAFOND période N',
+            'Total\nMontant\nCollecte\nO.Opér.Plancher\nExercice N': 'Objectifs Opérationnels SEUIL période N',
+            'Total\nValo. Financière\nCollecte\nO.Opér.\nExercice N': 'Valorisation Financière Objectifs Opérationnels N'
+        })
+
+        return df
+
+    except Exception as e:
+        st.error(f"❌ Une erreur est survenue lors du filtrage et renommage des colonnes : {str(e)}")
+        st.stop()
 
 
 def rename_columns(df):
