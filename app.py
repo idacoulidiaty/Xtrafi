@@ -1,6 +1,6 @@
 # -------------------- CONFIG PAGE (doit venir TOUT EN PREMIER) --------------------
 import streamlit as st
-st.set_page_config(page_title="Xtrafi Data Viz", layout="wide")
+# st.set_page_config(page_title="Xtrafi Data Viz", layout="wide")
 
 # -------------------- AUTRES IMPORTS --------------------
 import os
