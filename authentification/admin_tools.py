@@ -185,6 +185,7 @@ def admin_interface(current_username, config, authenticator, name):
                 user_data.setdefault("roles", ["user"])
                 user_data.setdefault("organizations", [])
 
+
             with st.form("user_form"):
                 username_input = st.text_input("Nom d'utilisateur", value=selected_choice if not is_new else "")
                 name_input = st.text_input("Nom complet", value=user_data.get("name", ""))

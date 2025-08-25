@@ -19,6 +19,7 @@ from components.export_excel import export_excel_with_figures
 from utils.styles import style_kpi, load_css
 from authentification.auth import load_auth_config, get_org_logo
 
+
 # Charge le CSS global
 load_css("static/style.css")
 

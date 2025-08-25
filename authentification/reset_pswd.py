@@ -22,3 +22,4 @@ def send_reset_email(receiver_email, reset_link, sender_email, app_password):
     except Exception as e:
         print("Erreur envoi email :", e)
         return False
+

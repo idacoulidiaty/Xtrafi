@@ -211,6 +211,8 @@ def forgot_password_page():
             st.error("Erreur lors de l'envoi de l'email.")
 
 
+
+
 def reset_password_page():
     config = load_auth_config()
     users = config["credentials"]["usernames"]
