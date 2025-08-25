@@ -50,6 +50,7 @@ elif st.session_state.get("page") == "forgot_password":
     st.stop()
 
 
+
 # ------------------ 🔐 AUTHENTICATEUR ------------------
 authenticator, config = init_authenticator(show_logo=False)
 
