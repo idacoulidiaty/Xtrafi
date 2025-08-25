@@ -9,7 +9,7 @@ import plotly.io as pio
 # Nécessaire pour fig.write_image
 pio.kaleido.scope.default_format = "png"
 
-def export_excel_with_figures(df_list, fig_list):
+def export_excel_with_figures(df_list, fig_list, fig_glob=None):
     output = BytesIO()
     wb = Workbook()
     del wb["Sheet"]  # Supprimer la feuille par défaut
@@ -80,6 +80,62 @@ def export_excel_with_figures(df_list, fig_list):
             ws_graph.add_image(img, cell_location)
             y_cursor[x_index % 2] += 25  # Espace vertical entre les graphs
             x_index += 1
+
+    # === 3. INSERTION DU GRAPHIQUE fig_glob DANS UN ONGLET DISTINCT ===
+    if fig_glob and isinstance(fig_glob, go.Figure):
+        ws_glob = wb.create_sheet(title="Graphique Variations")
+
+        try:
+            # Récupérer tous les labels y présents dans la figure (robuste à plusieurs traces)
+            y_labels = []
+            for tr in fig_glob.data:
+                if hasattr(tr, "y") and tr.y is not None:
+                    # tr.y peut être tuple/list/np.array
+                    y_labels.extend([str(v) for v in tr.y])
+
+            # préserver l'ordre et garder uniques
+            if y_labels:
+                seen = set()
+                labels = [x for x in y_labels if not (x in seen or seen.add(x))]
+            else:
+                labels = []
+
+            n_bars = len(labels)
+
+            # calculer marge gauche selon la longueur max d'étiquette
+            max_label_len = max((len(l) for l in labels), default=0)
+            left_margin = int(max(120, max_label_len * 7))  # ajuster le facteur si nécessaire
+
+            # hauteur adaptée au nombre de barres
+            height = max(600, 30 * n_bars + 200)  # 30 px par barre + marge
+            # largeur = marge gauche + espace utile pour barres
+            width = max(1200, left_margin + 1000)
+
+            # diminuer la taille des ticks si trop long
+            tick_font_size = 11
+            if max_label_len > 40:
+                tick_font_size = 9
+            if max_label_len > 80:
+                tick_font_size = 8
+
+            # Appliquer marges / automargin pour s'assurer que tout rentre
+            fig_glob.update_layout(
+                margin=dict(l=left_margin, r=50, t=60, b=50),
+                height=height,
+                width=width
+            )
+            fig_glob.update_yaxes(automargin=True, tickfont=dict(size=tick_font_size))
+
+            # Export image haute résolution
+            img_buffer = BytesIO()
+            fig_glob.write_image(img_buffer, format="png", width=width, height=height, scale=2)
+            img_buffer.seek(0)
+            img = XLImage(img_buffer)
+            ws_glob.add_image(img, "A1")
+
+        except Exception as e:
+            print(f"Erreur d'export image fig_glob : {e}")
+
 
     # Finalisation
     wb.save(output)

@@ -3,44 +3,96 @@ cookie:
   key: supersecretkey123
   name: xtrafi_auth
 credentials:
-  preauthorized: {}
   usernames:
+    Ida:
+      name: COULIDIATY
+      organizations: []
+      password: $2b$12$diA0CWB4HPjFNsjjAfia3emsi1f0zBQQuQx.AkA4nDTzPj0hvkA3y
+      roles:
+      - user
+      - super_admin
     admin:
       first_name: Administrateur
       last_name: Xtrafi
-      password: admin
+      password: $2b$12$XxIRP5C6EiliAdS34T3N1eFC9jik9liDLyCvaiqpEv2Vt91hw3jvK
       roles:
-      - admin
-    idacoul:
-      name: Ida COULIDATY
-      organizations:
-      - orga 1
-      - orga 2
-      password: idacoul
-      roles:
-      - user
       - admin
     fperdrix:
       name: Franck PERDRIX
       organizations:
-      - orga 1
       - orga 2
-      password: fperdrix
+      - orga 1
+      password: $2b$12$6.byloFwHVwWK9E/oKxvveBwZOasQTO5WHwyXGc3qQAshtK9g6fqq
       roles:
       - viewer
       - admin
       - user
-    fp_rpdt01:
-      name: Franck PERDRIX
+    idacoul:
+      email: idacoul@gmail.com
+      name: Ida COULIDIATY
+      organizations:
+      - orga 2
+      - orga 1
+      password: $2b$12$gBX1mSWNqil81XQWsG4Bze3dFjS83zce03W5f/PL1WbXrV3K/4IEa
+      reset_token: 37b0f242-fec4-4c40-9424-7a88f40c8f3d
+      roles:
+      - user
+      - admin
+    idacoul2:
+      name: Ida COULIDIATY
+      organizations:
+      - orga 2
+      password: idacoul2
+      roles:
+      - user
+      - admin
+    idarpdt:
+      name: ida coulidiaty
       organizations:
       - orga 1
-      password: fp_rpdt01
+      password: $2b$12$Vs9BKmab2xKz1ZadCFZfgeZog56PwkQ4/kkR09MbH73Uv1r6zR6vm
       roles:
       - user
-    rpdt_02:
-      name: Répondant 02
+    superadmin:
+      name: Super Admin
+      password: $2b$12$haYut/PRUGLVY/iGbMF0dekets6ur/RZddwOZdVGM6aIRWfrqCcpC
+      roles:
+      - super_admin
+    test:
+      name: test
+      organizations: []
+      password: $2b$12$R8WJ.WH4OnoMOaUvFTtg/uFl0Fba8cDqw0AuAFXYTtBggXy90f.SW
+      roles:
+      - user
+      - admin
+    test1:
+      name: test1
       organizations:
-      - orga3
-      password: rpdt_02
+      - orga 1
+      password: $2b$12$0fPzdFX/bTbRXer64Wpp8uQDD2vMd8.LaeoBp35iNZxGWvcm10raO
       roles:
       - user
+    test2:
+      name: test2
+      organizations: []
+      password: $2b$12$71Jgrxa.WaHfy46YeJNhKe16ftoV6IpE8T25JnZLu1eCF5sbippRi
+      roles:
+      - admin
+      - super_admin
+    test3:
+      name: test3
+      organizations:
+      - orga 3
+      password: $2b$12$of4gsImDejSpi0r2kMXlp.0RBmkKseaRqg5B/mz7DVFH5p5HNK8Fa
+      roles:
+      - user
+      - admin
+organizations:
+  orga 1:
+    logo: static/logos/orga_1.png
+  orga 2:
+    logo: static/logos/orga_2.png
+  orga 3:
+    logo: static/logos/orga_3.png
+  radiall:
+    logo: static/logos/radiall.png

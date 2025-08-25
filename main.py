@@ -1,23 +1,19 @@
 import streamlit as st
+
 # ------------------ ⚙️ CONFIG PAGE ------------------
 st.set_page_config(page_title="Xtrafi Data Viz", layout="wide")
+
+
 from app import run_app
-
-
-
 import uuid
 from authentification.auth import *
 from utils.styles import load_css
-
-
-
 
 # ------------------ 🎨 STYLES CSS ------------------
 css_path = "static/style.css"
 load_css(css_path)
 
-
-# ------------------ 🔄 DÉCONNEXION GÉRÉE PROPREMENT ------------------
+# ------------------ 🔄 DÉCONNEXION GÉRÉE ------------------
 if st.session_state.get("logout_triggered"):
     st.session_state.clear()
     st.session_state.login_key = f"login_form_{uuid.uuid4()}"
@@ -27,18 +23,32 @@ if st.session_state.get("logout_triggered"):
 if "page" not in st.session_state:
     st.session_state.page = "login"
 
-# Redirection vers la page de changement de mot de passe
-if st.session_state.page == "change_password":
-    changer_mot_de_passe_utilisateur()
+# # ------------------ 🔄 ROUTAGE POUR RÉINITIALISATION ------------------
+from urllib.parse import unquote
+
+query_params = st.query_params
+
+st.session_state.reset_token = unquote(query_params.get("reset_token", [""])[0])
+st.session_state.reset_user = unquote(query_params.get("user", [""])[0])
+
+# Debug
+st.write("DEBUG - session token:", st.session_state.reset_token)
+st.write("DEBUG - session user:", st.session_state.reset_user)
+
+# Si les deux valeurs sont présentes, passer sur la page reset_password
+if st.session_state.reset_token and st.session_state.reset_user:
+    st.session_state.page = "reset_password"
+
+# Routage des pages
+if st.session_state.get("page") == "reset_password":
+    from authentification.auth import reset_password_page
+    reset_password_page()
+    st.stop()
+elif st.session_state.get("page") == "forgot_password":
+    from authentification.auth import forgot_password_page
+    forgot_password_page()
     st.stop()
 
-if st.session_state.page == "login":
-    login_interface()
-    st.stop()
-
-elif st.session_state.page == "change_password":
-    changer_mot_de_passe_utilisateur()
-    st.stop()
 
 # ------------------ 🔐 AUTHENTICATEUR ------------------
 authenticator, config = init_authenticator(show_logo=False)
@@ -53,11 +63,19 @@ roles = user_data.get("roles", [])
 
 # ------------------ 🔀 ROUTAGE SELON ROLE ------------------
 if authentication_status is None:
-    st.warning("Veuillez vous connecter.")
+    login_interface(authenticator, config)
+    st.stop()
 elif authentication_status is False:
     st.error("Nom d'utilisateur ou mot de passe incorrect.")
 elif authentication_status is True:
-    if "admin" in roles:
+    if "super_admin" in roles:
+        nav = st.sidebar.selectbox("🔐 Menu Super Admin", ["Dashboard", "Admin"], key="navigation")
+        if nav == "Admin":
+            from authentification.admin_tools import run_admin_panel
+            run_admin_panel(username, authenticator, name)
+        else:
+            run_app(name, authenticator)
+    elif "admin" in roles:
         nav = st.sidebar.selectbox("🔐 Menu administrateur", ["Dashboard", "Admin"], key="navigation")
         if nav == "Admin":
             from authentification.admin_tools import run_admin_panel

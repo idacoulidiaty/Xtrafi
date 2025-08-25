@@ -11,12 +11,13 @@ import pandas as pd
 from config import WATCHED_FOLDER, LOGO_PATH
 from data_loader import load_data
 from components.sidebar import sidebar_file_selection
-from preprocessing import filter_and_rename_columns, compute_variations
+from preprocessing import filter_and_rename_columns, compute_variations,plot_variations_detaillees
 from components.tab_dataframes import afficher_onglet, filtrer_par_code_axe      # ✅ nouvelle fonction unique
 from components.tab_dashboards import afficher_tableau
 from components.graphs_dashboard import generate_graphs_par_indicateur_en_colonnes
 from components.export_excel import export_excel_with_figures
 from utils.styles import style_kpi, load_css
+from authentification.auth import load_auth_config, get_org_logo
 
 # Charge le CSS global
 load_css("static/style.css")
@@ -40,7 +41,11 @@ def logout(authenticator):
 def run_app(name, authenticator=None):
     # ----- SIDEBAR -----
     with st.sidebar:
-        st.image(LOGO_PATH, use_container_width=True)
+        config = load_auth_config()
+        org = st.session_state.get("organization")
+        logo_path = get_org_logo(org, config) or LOGO_PATH
+
+        st.image(logo_path, use_container_width=True)
         st.markdown(" " * 4, unsafe_allow_html=True)  # petit espace
         st.markdown(f"### Bienvenue {name}")
 
@@ -133,7 +138,8 @@ def run_app(name, authenticator=None):
         "📋 REEL N vs N-1",
         "📋 REEL N vs Obj. Opérationnels",
         "📋 REEL N vs Obj. Stratégiques",
-        "📊 Visualisations"
+        "📊 Visualisations",
+        "Vision globale"
     ]
 
     if "onglet_actif" not in st.session_state:
@@ -185,6 +191,12 @@ def run_app(name, authenticator=None):
         st.session_state['last_figs'] = figs
         st.session_state['last_fig_infos'] = fig_infos
 
+    elif st.session_state.onglet_actif == 4:
+
+        fig_glob = plot_variations_detaillees(df3)
+        st.plotly_chart(fig_glob, use_container_width=True)
+        st.session_state['fig_glob'] = fig_glob
+
     # ----- EXPORT -----
     
     st.markdown("---")
@@ -207,7 +219,10 @@ def run_app(name, authenticator=None):
         ]
 
         figs = st.session_state.get('last_figs', [])
-        xls = export_excel_with_figures(df_list, figs)
+        fig_glob = st.session_state.get('fig_glob', None)
+
+
+        xls = export_excel_with_figures(df_list, figs, fig_glob=fig_glob)
 
         st.download_button(
             "📥 Télécharger l'export",

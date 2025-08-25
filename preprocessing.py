@@ -107,3 +107,54 @@ def compute_variations(df, col_reel_n, col_reel_n1):
             df[var_colname] = compute_ratio(df[col_reel_n], df[col])
 
     return df
+
+
+
+
+import pandas as pd
+import numpy as np
+import plotly.express as px
+
+def plot_variations_detaillees(df):
+    # Nettoyer la casse de la colonne Axe
+    df['Axe'] = df['Axe'].str.upper()
+
+    axes_order = ['EN', 'SO', 'GO']
+
+    # Concaténer Axe et nom indicateur
+    df['axe_indic'] = df['Axe'] + ' - ' + df['Nom indicateur Virtuel']
+
+    order_list = []
+    for axe in axes_order:
+        indicateurs_dans_axe = df[df['Axe'] == axe]['Nom indicateur Virtuel'].unique()
+        order_list.extend([f"{axe} - {ind}" for ind in indicateurs_dans_axe])
+
+    df['axe_indic'] = pd.Categorical(df['axe_indic'], categories=order_list, ordered=True)
+
+    # Couleurs vert / rouge selon signe de la variation
+    col_pos = '#2ca02c'
+    col_neg = '#d62728'
+    df['color'] = np.where(df['VARIATION Réel N vs Réel N-1 (%)'] >= 0, col_pos, col_neg)
+
+    fig = px.bar(
+        df,
+        x='VARIATION Réel N vs Réel N-1 (%)',
+        y='axe_indic',
+        orientation='h',
+        color='color',
+        color_discrete_map={col_pos: col_pos, col_neg: col_neg},
+        title="Variations Réel N vs Réel N-1 par indicateur et axe"
+    )
+
+    fig.update_layout(
+        xaxis_title="Variation (%)",
+        yaxis_title="Indicateur (groupé par Axe)",
+        yaxis_categoryorder='array',
+        yaxis_categoryarray=order_list,
+        height=600,
+        width=900,
+        showlegend=False,
+        bargap=0.2
+    )
+
+    return fig

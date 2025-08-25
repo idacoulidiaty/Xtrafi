@@ -1,6 +1,6 @@
 import streamlit as st
 import os
-from config import WATCHED_FOLDER, LOGO_PATH
+from config import WATCHED_FOLDER
 from data_loader import get_latest_excel_file
 
 def sidebar_file_selection():

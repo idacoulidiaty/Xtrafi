@@ -157,3 +157,6 @@ def generate_graphs_par_indicateur_en_colonnes(
         })
 
     return figs, fig_infos
+
+
+
