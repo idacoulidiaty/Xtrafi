@@ -87,6 +87,7 @@ credentials:
       roles:
       - user
       - admin
+      
 organizations:
   orga 1:
     logo: static/logos/orga_1.png
