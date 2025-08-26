@@ -25,35 +25,25 @@ if "page" not in st.session_state:
 
 # ------------------ 🔄 ROUTAGE POUR RÉINITIALISATION ------------------
 from urllib.parse import unquote
+import streamlit as st
+from authentification.auth import reset_password_page, forgot_password_page
 
+# Récupération directe des query params
 query_params = st.query_params
-
-# Ne remplir que si ce n'est pas déjà défini
-if "reset_token" not in st.session_state or not st.session_state.reset_token:
-    st.session_state.reset_token = unquote(query_params.get("reset_token", ""))
-
-if "reset_user" not in st.session_state or not st.session_state.reset_user:
-    st.session_state.reset_user = unquote(query_params.get("user", ""))
+reset_token = unquote(query_params.get("reset_token", [""])[0])
+reset_user = unquote(query_params.get("user", [""])[0])
 
 # Debug
-st.write("DEBUG - session token:", st.session_state.reset_token)
-st.write("DEBUG - session user:", st.session_state.reset_user)
+st.write("DEBUG - reset_token:", reset_token)
+st.write("DEBUG - reset_user:", reset_user)
 
 # Si les deux valeurs sont présentes, passer sur la page reset_password
-if st.session_state.reset_token and st.session_state.reset_user:
-    st.session_state.page = "reset_password"
-
-# Routage des pages
-if st.session_state.get("page") == "reset_password":
-    from authentification.auth import reset_password_page
-    reset_password_page()
+if reset_token and reset_user:
+    reset_password_page(reset_token, reset_user)
     st.stop()
 elif st.session_state.get("page") == "forgot_password":
-    from authentification.auth import forgot_password_page
     forgot_password_page()
     st.stop()
-
-
 
 
 # ------------------ 🔐 AUTHENTICATEUR ------------------
