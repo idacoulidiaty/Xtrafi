@@ -220,7 +220,7 @@ def reset_password_page(reset_token, reset_user):
     # DEBUG
     st.write("DEBUG - username:", reset_user)
     st.write("DEBUG - token:", reset_token)
-    st.write("DEBUG - token YAML:", users.get(reset_user, {}).get("reset_token"))
+    st.write("DEBUG - token YAML11:", users.get(reset_user, {}).get("reset_token"))
 
     if reset_user not in users or users[reset_user].get("reset_token") != reset_token:
         st.error("Lien invalide ou expiré.")
