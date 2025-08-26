@@ -30,8 +30,8 @@ from authentification.auth import reset_password_page, forgot_password_page
 query_params = st.query_params
 
 # Extraire directement la première valeur de la liste
-reset_token = unquote(query_params.get("reset_token", [""])[0])
-reset_user = unquote(query_params.get("user", [""])[0])
+reset_token = unquote(query_params.get("reset_token", ""))
+reset_user = unquote(query_params.get("user", ""))
 
 # Debug
 st.write("DEBUG - reset_token:", reset_token)
