@@ -213,19 +213,16 @@ def forgot_password_page():
 
 
 
-def reset_password_page():
+def reset_password_page(reset_token, reset_user):
     config = load_auth_config()
     users = config["credentials"]["usernames"]
 
-    token = st.session_state.get("reset_token")
-    username = st.session_state.get("reset_user")
-
     # DEBUG
-    st.write("DEBUG - username:", username)
-    st.write("DEBUG - token:", token)
-    st.write("DEBUG - token YAML:", users.get(username, {}).get("reset_token"))
+    st.write("DEBUG - username:", reset_user)
+    st.write("DEBUG - token:", reset_token)
+    st.write("DEBUG - token YAML:", users.get(reset_user, {}).get("reset_token"))
 
-    if username not in users or users[username].get("reset_token") != token:
+    if reset_user not in users or users[reset_user].get("reset_token") != reset_token:
         st.error("Lien invalide ou expiré.")
         return
 
@@ -238,8 +235,8 @@ def reset_password_page():
         elif len(new_pwd) < 6:
             st.warning("Mot de passe trop court (6 caractères minimum).")
         else:
-            users[username]["password"] = bcrypt.hash(new_pwd)
-            users[username].pop("reset_token", None)
+            users[reset_user]["password"] = bcrypt.hash(new_pwd)
+            users[reset_user].pop("reset_token", None)
             save_auth_config(config)
             st.success("Mot de passe réinitialisé avec succès !")
             st.session_state.page = "login"
