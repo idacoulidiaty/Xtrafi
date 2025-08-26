@@ -190,7 +190,7 @@ def forgot_password_page():
         # Créer le lien de réinitialisation
         from urllib.parse import quote
 
-        reset_link = f"https://xtrafibi-v1.streamlit.app//?reset_token={quote(token)}&user={quote(matched_user)}"
+        reset_link = f"https://xtrafibi-v1.streamlit.app/?reset_token={quote(token)}&user={quote(matched_user)}"
 
         # reset_link = f"http://localhost:8501/?reset_token={token}&user={matched_user}"
 
