@@ -31,7 +31,7 @@ query_params = st.query_params
 reset_token = unquote(query_params.get("reset_token", [""])[0])
 reset_user = unquote(query_params.get("user", [""])[0])
 
-st.write("DEBUG - reset_token:", reset_token)
+st.write("DEBUG - reset_token1:", reset_token)
 st.write("DEBUG - reset_user:", reset_user)
 
 if reset_token and reset_user:
