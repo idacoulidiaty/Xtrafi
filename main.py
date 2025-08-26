@@ -28,8 +28,8 @@ from urllib.parse import unquote
 
 query_params = st.query_params
 
-st.session_state.reset_token = unquote(query_params.get("reset_token", [""])[0])
-st.session_state.reset_user = unquote(query_params.get("user", [""])[0])
+st.session_state.reset_token = unquote(query_params.get("reset_token", ""))
+st.session_state.reset_user = unquote(query_params.get("user", ""))
 
 # Debug
 st.write("DEBUG - session token:", st.session_state.reset_token)
@@ -38,7 +38,7 @@ st.write("DEBUG - session user:", st.session_state.reset_user)
 # Si les deux valeurs sont présentes, passer sur la page reset_password
 if st.session_state.reset_token and st.session_state.reset_user:
     st.session_state.page = "reset_password"
-
+    
 # Routage des pages
 if st.session_state.get("page") == "reset_password":
     from authentification.auth import reset_password_page
