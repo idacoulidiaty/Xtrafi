@@ -28,8 +28,9 @@ from urllib.parse import unquote
 
 query_params = st.query_params
 
-st.session_state.reset_token = unquote(query_params.get("reset_token", [""])[3])
-st.session_state.reset_user = unquote(query_params.get("user", [""])[3])
+st.session_state.reset_token = unquote(query_params.get("reset_token", ""))
+st.session_state.reset_user = unquote(query_params.get("user", ""))
+
 
 # Debug
 st.write("DEBUG - session token:", st.session_state.reset_token)
