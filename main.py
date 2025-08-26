@@ -22,15 +22,15 @@ if st.session_state.get("logout_triggered"):
 # ------------------ 🌐 ROUTAGE DES PAGES ------------------
 if "page" not in st.session_state:
     st.session_state.page = "login"
-
-# # ------------------ 🔄 ROUTAGE POUR RÉINITIALISATION ------------------
+    
+# ------------------ 🔄 ROUTAGE POUR RÉINITIALISATION ------------------
 from urllib.parse import unquote
 
 query_params = st.query_params
 
+# Ici on récupère directement les strings, pas besoin de [0]
 st.session_state.reset_token = unquote(query_params.get("reset_token", ""))
 st.session_state.reset_user = unquote(query_params.get("user", ""))
-
 
 # Debug
 st.write("DEBUG - session token:", st.session_state.reset_token)
