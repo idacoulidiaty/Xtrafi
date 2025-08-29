@@ -68,3 +68,8 @@ section[data-testid="stSidebar"] button {
 section[data-testid="stSidebar"] button:hover {
     background-color: #133456 !important;
 }
+
+.debug-css {
+    color: red !important;
+    font-size: 24px !important;
+}

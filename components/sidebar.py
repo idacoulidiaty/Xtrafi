@@ -3,6 +3,7 @@ import os
 from config import WATCHED_FOLDER
 from data_loader import get_latest_excel_file
 
+
 def sidebar_file_selection():
 
     st.sidebar.header("📁 Importer un fichier")
@@ -19,9 +20,6 @@ def sidebar_file_selection():
             options=watched_files,
             index=watched_files.index(default_file) if default_file in watched_files else 0
         )
-
-
-
     return uploaded_file, selected_file
 
 

@@ -76,7 +76,8 @@ def run_app(name, authenticator=None):
  
 
 
-    # ----- ONGLETS DE DONNÉES BRUTES -----
+    # ----- ONGLETS DE DONNÉES BRUTES -----    
+
     onglet_map = {
         "📈 Paramètres restitution": (df1, 1),
         "📊 Données brutes": (df2_apercu, 2),
@@ -125,15 +126,16 @@ def run_app(name, authenticator=None):
     df3 = compute_variations(df3, col_reel_n='Reel N', col_reel_n1='Reel N-1')
 
 
+
     # st.markdown("---")
     # tab1, tab2, tab3, tab4 = st.tabs(
     #     ["📋 REEL N vs N-1",
     #      "📋 REEL N vs Obj. Opérationnels",
     #      "📋 REEL N vs Obj. Stratégiques",
-    #      "📊 Visualisations"]
-    # )
+    #      "📊 Visualisations"] 
+    # ) 
 
-    # --- Tableaux KPI ---
+    # --- Tableaux KPI ---  
     st.markdown("---")
     onglets_labels = [
         "📋 REEL N vs N-1",
@@ -207,8 +209,8 @@ def run_app(name, authenticator=None):
         df3_export = st.session_state.get('df_tab3_filtré')
 
         if df1_export is None:
-            df1_export = df3[cols1]  # données complètes, non filtrées
-        if df2_export is None:
+            df1_export = df3[cols1]  # données complètes, non filtrées 
+        if df2_export is None: 
             df2_export = df3[cols2]
         if df3_export is None:
             df3_export = df3[cols3]
@@ -246,7 +248,7 @@ def run_app(name, authenticator=None):
         # # Récupérer la bonne DataFrame selon choix
         # if df_choice == "Données brutes":
         #     df_source = df2
-        #     col_indicateur = "Nom Ind.N2\nAPP"
+        #     col_indicateur = "Nom Ind.N2\nAPP" 
         #     col_val_n1 = "Total\nMontant\nCollecte\nRéelle\nExercice N-1"
         #     col_val_n = "Total\nMontant\nCollecte\nRéelle\nExercice N"
         # else:
