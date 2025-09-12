@@ -16,12 +16,10 @@ def style_kpi(df: pd.DataFrame):
                 continue
             try:
                 if "VARIATION" in col:
-                    formatted_row.append(f"{val:.1f}%")
+                    formatted_row.append(f"{val:.2f}%")
                 elif "Valorisation Financière" in col:
-                    s = f"{val:,.2f}".replace(",", " ")
+                    s = f"{val:,.0f}".replace(",", " ")
                     formatted_row.append(s)
-                elif unite == "%":
-                    formatted_row.append(f"{val:.1f}")
                 else:
                     s = f"{val:,.2f}".replace(",", " ")
                     formatted_row.append(s)
@@ -43,29 +41,44 @@ def style_kpi(df: pd.DataFrame):
 
     # Table styles généraux
     style = style.set_table_styles([
-        {'selector': 'th', 'props': [('background-color', '#f2f2f2'), ('white-space', 'pre-wrap'), ('font-size', '12px')]},
-        {'selector': 'td', 'props': [('white-space', 'pre-wrap'), ('text-align', 'right'), ('font-size', '12px')]},
-        {'selector': 'td.nowrap-col', 'props': [('white-space', 'nowrap')]},
+        {'selector': 'th', 'props': [('background-color', '#f2f2f2'), ('white-space', 'pre-wrap'), ('font-size', '12px'),('text-align', 'center'),('width', '130px')]},
+        {'selector': 'td', 'props': [('white-space', 'pre-wrap'), ('text-align', 'right'), ('font-size', '12px'),('width', '130px') ]},
+        {'selector': 'td.nowrap-col', 'props': [('white-space', 'nowrap')]}, # garde ces colonnes sur une ligne
     ])
+    # # Augmenter largeur d'une seule colonne 
+    # style = style.set_properties(subset=["Nom indicateur Virtuel"], **{'width': '300px'})
+
 
     # ✅ Mapping des couleurs conditionnelles
     col_color_map = {
         "Reel N": "aliceblue",
-        "Reel N-1": "whitesmoke",
-        "VARIATION Réel N vs Réel N-1 (%)": "lemonchiffon",
-        "Valorisation Financière REEL N-1": "whitesmoke",
+        "Reel N-1": "honeydew",
+        "VARIATION Réel N vs Réel N-1 (%)": "whitesmoke",
+        "Valorisation Financière REEL N-1": "honeydew",
         "Valorisation Financière REEL N": "aliceblue",
-        "VARIATION Objectifs Opérationnels SEUIL N vs Réel N (%)": "lemonchiffon",
-        "VARIATION Objectifs Opérationnels PLAFOND N vs Réel N (%)": "lemonchiffon",
-        "VARIATION Objectifs Stratégiques SEUIL N vs Réel N (%)": "lemonchiffon",
-        "VARIATION Objectifs Stratégiques PLAFOND N vs Réel N (%)": "lemonchiffon"
+        "Objectifs Opérationnels SEUIL période N": "papayawhip",
+        "Objectifs Opérationnels PLAFOND période N": "papayawhip",
+        "Objectifs Stratégiques SEUIL période N": "lemonchiffon",
+        "Objectifs Stratégiques PLAFOND période N": "lemonchiffon",
+        "Valorisation Financière Objectifs Opérationnels N": "papayawhip",
+        "Valorisation Financière Objectifs Stratégiques N": "lemonchiffon",
+        "VARIATION Objectifs Opérationnels SEUIL période N vs Réel N (%)": "whitesmoke",
+        "VARIATION Objectifs Opérationnels PLAFOND période N vs Réel N (%)": "whitesmoke",
+        "VARIATION Objectifs Stratégiques SEUIL période N vs Réel N (%)": "whitesmoke",
+        "VARIATION Objectifs Stratégiques PLAFOND période N vs Réel N (%)": "whitesmoke"
     }
+    
 
     # 🧠 Utilisation  de .map() colonne par colonne
+    # for col, color in col_color_map.items():
+    #     if col in df.columns:
+    #         style = style.map(lambda col: f"background-color: {color}", subset=[col])
     for col, color in col_color_map.items():
         if col in df.columns:
-            style = style.map(lambda col: f"background-color: {color}", subset=[col])
-
+            style = style.set_properties(
+                subset=[col],
+                **{"background-color": color}
+             )
     return style
 
 

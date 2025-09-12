@@ -201,7 +201,7 @@ def user_management(config, current_roles, current_orgs, visible_users):
 
 
         # Rôles disponibles selon le rôle de l'admin
-        available_roles = ["user", "viewer"]
+        available_roles = ["viewer"]
         if "super_admin" in current_roles:
             available_roles += ["admin", "super_admin"]
         elif "admin" in current_roles:
@@ -221,12 +221,12 @@ def user_management(config, current_roles, current_orgs, visible_users):
                 # Réinitialiser à un utilisateur par défaut (le 1er visible si dispo)
                 st.session_state.selected_choice = visible_users[0] if visible_users else "Nouvel utilisateur"
                 st.rerun()
-            default_name, default_email, default_roles, default_orgs = "", "", ["user"], []
+            default_name, default_email, default_roles, default_orgs = "", "", ["viewer"], []
         else:
             udata = users[selected_choice]
             default_name = udata.get("name", "")
             default_email = udata.get("email", "")
-            default_roles = udata.get("roles", ["user"])
+            default_roles = udata.get("roles", ["viewer"])
             default_orgs = [o for o in udata.get("organizations", []) if o in visible_orgs_for_user]
 
         # --- Formulaire utilisateur ---
@@ -386,7 +386,7 @@ def organization_management(config, current_roles, current_orgs):
         elif "admin" in current_roles:
             for u, data in users.items():
                 if set(data.get("organizations", [])) & set(current_orgs):
-                    if any(r in ["user", "viewer", "admin"] for r in data.get("roles", [])):
+                    if any(r in ["viewer", "admin"] for r in data.get("roles", [])):
                         users_list.append(u)
 
         # --- Création nouvelle organisation ---
@@ -497,20 +497,29 @@ def organization_management(config, current_roles, current_orgs):
     with col2:
         st.write("### Organisations et utilisateurs affectés (Lecture seule)")
         org_list = []
-        for org_name, org_data in config.get("organizations", {}).items():
-            users_in_org = [u for u, data in users.items() if org_name in data.get("organizations", [])]
+    
+        # Organismes visibles selon rôle
+        if "super_admin" in current_roles:
+            visible_orgs_read = list(config.get("organizations", {}).keys())
+        else:  # admin
+            visible_orgs_read = [o for o in current_orgs if o in config.get("organizations", {})]
+    
+        for org_name in visible_orgs_read:
+            users_in_org = [
+                u for u, data in users.items()
+                if org_name in data.get("organizations", [])
+            ]
             org_list.append({
                 "Organisation": org_name,
                 "Utilisateurs affectés": ", ".join(users_in_org),
                 "Nombre d'utilisateurs": len(users_in_org)
             })
-
+    
         df_orgs = pd.DataFrame(org_list)
         if df_orgs.empty:
             df_orgs = pd.DataFrame(columns=["Organisation", "Utilisateurs affectés", "Nombre d'utilisateurs"])
         st.dataframe(df_orgs, use_container_width=True)
-
-
+    
 
 def admin_interface(current_username, config, authenticator, name):
     st.title("Administration des Utilisateurs et des Organisations")

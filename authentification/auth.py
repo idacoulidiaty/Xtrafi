@@ -102,7 +102,7 @@ def login_interface(authenticator, config):
     # --- Authentification (on laisse la lib gérer les valeurs dans st.session_state) ---
     authenticator.login(
         location="main",
-        max_login_attempts=3,
+        max_login_attempts=10,
         key=st.session_state.get("login_key", "login_form_default"),
         fields={
             "Form name": "Bienvenue",
@@ -127,10 +127,6 @@ def login_interface(authenticator, config):
     if not authentication_status:
         st.markdown("---")
         col1, col2 = st.columns(2)
-        with col1:
-            if st.button("🔐 Modifier mon mot de passe", key="change_pwd_btn"):
-                st.session_state.page = "change_password"
-                st.rerun()
         with col2:
             if st.button("🔑 Mot de passe oublié ?", key="forgot_pwd_btn"):
                 st.session_state.page = "forgot_password"
@@ -162,7 +158,7 @@ def login_interface(authenticator, config):
             st.markdown(f"**Organisation :** {selected_org_temp}")
 
         # --- Boutons toujours visibles (avec key unique) ---
-        col1, col2 = st.columns(2)
+        col1, col2,col3 = st.columns(3)
         with col1:
             if st.button("⬅️ Retour à la connexion"):
                 st.session_state.page = "login"
@@ -171,6 +167,10 @@ def login_interface(authenticator, config):
                 st.session_state.authentication_status = None
                 st.rerun()
         with col2:
+            if st.button("🔐 Modifier mon mot de passe", key="change_pwd_btn"):
+                st.session_state.page = "change_password"
+                st.rerun()
+        with col3:
             # Si utilisateur n'a pas d'organisation mais est super-admin, on met une valeur par défaut
             if not st.session_state.get("organization") and is_super_admin(username, config):
                 st.session_state.organization = "all_organizations"
@@ -233,6 +233,7 @@ def changer_mot_de_passe_utilisateur():
                 st.success("✅ Mot de passe modifié avec succès.")
                 st.session_state.page = "login"
                 st.rerun()
+
 
 def forgot_password_page():
     st.markdown("## 🔑 Mot de passe oublié ?")

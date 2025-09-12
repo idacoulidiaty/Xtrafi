@@ -9,3 +9,4 @@ LOGO_PATH = "static/logo-xtrafi.png"
 onglet_1= "Paramètres restit."
 onglet_2= "Restit Brute (Total Répdts)"
 onglet_3= "Restit Rapport (Total Répdts)"
+          

@@ -55,7 +55,7 @@ def generate_graphs_par_indicateur_en_colonnes(
         val_n = df_indic[col_val_n].values[0] if col_val_n in df_indic else None
 
         unite = df_indic["Unité\nconversion"].values[0] if "Unité\nconversion" in df_indic else ""
-        monnaie = df_indic["Monnaie\nlocale"].values[0] if "Monnaie\nlocale" in df_indic else ""
+        monnaie = df_indic["Unité\nValorisation\nfinancière"].values[0] if "Unité\nValorisation\nfinancière" in df_indic else ""
         valo_fi_n1 = df_indic['Total\nValo. Financière\nCollecte Réelle\nExercice N-1'].values[0] if 'Total\nValo. Financière\nCollecte Réelle\nExercice N-1' in df_indic else None
         valo_fi_n = df_indic['Total\nValo. Financière\nCollecte Réelle\nExercice N'].values[0] if 'Total\nValo. Financière\nCollecte Réelle\nExercice N' in df_indic else None
 
@@ -82,12 +82,12 @@ def generate_graphs_par_indicateur_en_colonnes(
             if label in selected_labels
         ]
 
-        with col_ui.expander(f"📊 {indicateur} (en {unite})", expanded=True):
+        with col_ui.expander(f"📊 **{indicateur} (en {unite})**", expanded=True):
             fig = go.Figure()
-            fig.add_bar(x=[0], y=[val_n1], name="Exercice N-1", marker_color="lightblue", width=0.07)
-            fig.add_bar(x=[0.10], y=[val_n], name="Exercice N", marker_color="midnightblue", width=0.07)
+            fig.add_bar(x=[0], y=[val_n1], name="Exercice N-1", marker_color="palegreen", width=0.07, hovertemplate=f"Exercice N-1 : {float(val_n1):,.2f} {unite}<extra></extra>".replace(",", " "))
+            fig.add_bar(x=[0.10], y=[val_n], name="Exercice N", marker_color="lightblue", width=0.07, hovertemplate=f"Exercice N : {float(val_n):,.2f} {unite}<extra></extra>".replace(",", " "))
             fig.update_layout(
-                title=f"{indicateur}",
+                title=f'''{indicateur}''',
                 barmode="group",
                 bargap=0.01,
                 height=500,
@@ -99,6 +99,37 @@ def generate_graphs_par_indicateur_en_colonnes(
                     range=[-0.1, 0.4]
                 )
             )
+
+            with col_ui.expander(f"📊 **{indicateur} (en {unite})**", expanded=True):
+                fig = go.Figure()
+                fig.add_bar(
+                    x=[0], y=[val_n1],
+                    name="Exercice N-1",
+                    marker_color="palegreen",
+                    width=0.07,
+                    hovertemplate=f"Exercice N-1 : {float(val_n1):,.2f} {unite}<extra></extra>".replace(",", " ")
+                )
+                fig.add_bar(
+                    x=[0.10], y=[val_n],
+                    name="Exercice N",
+                    marker_color="lightblue",
+                    width=0.07,
+                    hovertemplate=f"Exercice N : {float(val_n):,.2f} {unite}<extra></extra>".replace(",", " ")
+                )
+                fig.update_layout(
+                    title=f"{indicateur}",
+                    barmode="group",
+                    bargap=0.01,
+                    height=500,
+                    xaxis=dict(
+                        tickmode="array",
+                        tickvals=[0, 0.10],
+                        ticktext=["N-1", "N"],
+                        showticklabels=True,
+                        range=[-0.1, 0.4]
+                    )
+                )
+
             for obj_col in selected_objectifs:
                 val_obj = df_indic[obj_col].values[0]
                 if pd.notna(val_obj):
@@ -122,17 +153,23 @@ def generate_graphs_par_indicateur_en_colonnes(
                 var_colname = f"VARIATION {obj_col} vs Réel N (%)"
                 if var_colname in df_indic.columns:
                     variation = df_indic[var_colname].values[0]
-                    if pd.notna(variation):
-                        couleur = "🟢" if variation < 0 else "🔴"
-                        fleche = "⬇️" if variation < 0 else "⬆️"
+                    val_obj = df_indic[obj_col].values[0]  
+                    if pd.notna(variation) and pd.notna(val_obj):
+                        if "Plancher" in obj_col:
+                            couleur = "🔴" if val_n < val_obj else "🟢"
+                        elif "Plafond" in obj_col:
+                            couleur = "🔴" if val_n > val_obj else "🟢"
+                        else:
+                            couleur = ""  
                         label = noms_objectifs_lisibles.get(obj_col, obj_col)
-                        text_lines.append(f"{label} : {fleche} {variation:.1f}% {couleur}")
+                        text_lines.append(f"{label} : {variation:.2f}% {couleur}")
+
 
             if text_lines:
                 fig.add_annotation(
                     text="<br>".join(text_lines),
                     xref="paper", yref="paper",
-                    x=1.22, y=0.4,
+                    x=1.15, y=0.4,
                     showarrow=False,
                     align="left",
                     font=dict(size=13, color="black"),

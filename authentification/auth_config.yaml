@@ -33,7 +33,7 @@ credentials:
       - orga 3
       - radiall
       password: $2b$12$qS48CYgqroxWuZN2mnkVTeVrl4URIn00YxXX.VLQ3je9/e4A65AX6
-      reset_token: 8d257e93-43ff-4de2-9dfa-225f1305a652
+      reset_token: 1b9019d7-973f-428c-9980-ca316a5405ca
       roles:
       - user
       - admin
@@ -79,6 +79,15 @@ credentials:
       roles:
       - user
       - admin
+    viewer:
+      email: viewer@xtrafi.fr
+      name: viewer
+      organizations:
+      - radiall
+      - orga 3
+      password: $2b$12$p4rlouirzNDya2.V3AyIqOfB9lsnO.Vuv4v0JUqlkwZri/qZGsoSW
+      roles:
+      - viewer
 organizations:
   orga 1:
     logo: static/logos/orga_1.png

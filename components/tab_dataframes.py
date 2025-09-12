@@ -17,13 +17,6 @@ def afficher_onglet(df, no_onglet=1):
 
 
 
-# Dictionnaire de correspondance code ↔ nom complet
-CODE_AXE_MAPPING = {
-    'EN': 'Environnement',
-    'SO': 'Social',
-    'GO': 'Gouvernance'
-}
-
 def filtrer_par_code_axe(df, key_prefix="default"):
     possible_cols = ["Code axe\nAPP", "Code \naxeAPP", "Axe"]
     colonne_code = next((col for col in possible_cols if col in df.columns), None)
@@ -31,21 +24,27 @@ def filtrer_par_code_axe(df, key_prefix="default"):
     if colonne_code is None:
         return df  # Pas de filtre possible, on retourne df inchangé
 
+    # On récupère les valeurs uniques présentes dans la colonne
+    valeurs_disponibles = (
+        df[colonne_code]
+        .dropna()
+        .astype(str)  # sécurité
+        .unique()
+    )
 
+    # On trie pour avoir un affichage propre
+    valeurs_disponibles = sorted(valeurs_disponibles)
 
-    valeurs_disponibles = df[colonne_code].dropna().unique()
-    valeurs_affichees = [CODE_AXE_MAPPING.get(v, v) for v in valeurs_disponibles]
-
+    # Streamlit multiselect dynamique
     choix_utilisateur = st.multiselect(
-        "Filtrer par axe ESG",
-        options=valeurs_affichees,
-        default=valeurs_affichees,
+        "Filtrer par axe :",
+        options=valeurs_disponibles,
+        default=valeurs_disponibles,  # par défaut : tout est sélectionné
         key=f"multiselect_{key_prefix}"
     )
 
     if not choix_utilisateur:
-        return df  # Aucun filtre appliqué
+        return df  # aucun filtre → retour inchangé
 
-    codes_selectionnes = [k for k, v in CODE_AXE_MAPPING.items() if v in choix_utilisateur]
-
-    return df[df[colonne_code].isin(codes_selectionnes)]
+    # Filtrer en fonction de la sélection
+    return df[df[colonne_code].isin(choix_utilisateur)]
