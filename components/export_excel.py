@@ -9,6 +9,26 @@ import plotly.io as pio
 # Nécessaire pour fig.write_image
 pio.kaleido.scope.default_format = "png"
 
+def sanitize_for_excel(df):
+    """
+    Nettoie un DataFrame pour être compatible avec openpyxl :
+    - remplace pd.NA et NaN par None
+    """
+    import numpy as np
+    import pandas as pd
+
+    if df is None or df.empty:
+        return df
+
+    # Conversion en type object pour permettre None
+    df = df.astype(object)
+
+    # Remplacer tous les NA/NaN par None
+    df = df.where(pd.notna(df), None)
+
+    return df
+
+
 def export_excel_with_figures(df_list, fig_list, fig_glob=None):
     output = BytesIO()
     wb = Workbook()

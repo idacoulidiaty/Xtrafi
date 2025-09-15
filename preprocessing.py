@@ -20,7 +20,7 @@ def filter_and_rename_columns(df):
         'Nom\nREPORTING Ind.\nVIRTUEL': 'Nom Reporting',
         'Code\nRAPPORT Ind.\nVIRTUEL': 'Code Rapport Indicateur Virtuel',
         'Nom\nRAPPORT Ind.\nVIRTUEL': 'Nom Rapport Indicateur Virtuel',
-        'Code\nAPP Indicateur\nVIRTUEL': 'Code indicateur Virtuel',
+        'Code\nAPP Indicateur\nVIRTUEL': 'Code App indicateur Virtuel',
         'Nom\nAPP Indicateur\nVIRTUEL': 'Nom indicateur Virtuel',
         "Unité de conversion\n(de l'indicateur virtuel)": "Unité de conversion de l'indicateur",
         'Total\nMontant\nCollecte\nRéelle\nExercice N-1': 'Reel N-1',
@@ -71,7 +71,8 @@ def compute_ratio(numerateur, denominateur):
 
 def compute_variations(df, col_reel_n, col_reel_n1):
     """
-    Calcule les variations en % entre Réel N et Réel N-1, et entre Réel N et tous les objectifs disponibles.
+    Calcule les variations en % entre Réel N et Réel N-1, 
+    et entre Réel N et tous les objectifs disponibles.
 
     Args:
         df (pd.DataFrame) : Données source.
@@ -81,24 +82,34 @@ def compute_variations(df, col_reel_n, col_reel_n1):
     Returns:
         pd.DataFrame enrichi des colonnes de variation.
     """
+
     if col_reel_n not in df.columns or col_reel_n1 not in df.columns:
         return df
 
+    # 🔹 Conversion sécurisée en numérique pour éviter les erreurs de type (str - str)
+    df[col_reel_n] = pd.to_numeric(df[col_reel_n], errors="coerce").fillna(0)
+    df[col_reel_n1] = pd.to_numeric(df[col_reel_n1], errors="coerce").fillna(0)
+
+    # Variation Réel N vs Réel N-1
     df["VARIATION Réel N vs Réel N-1 (%)"] = compute_ratio(df[col_reel_n], df[col_reel_n1])
 
-    # Heuristique pour repérer les colonnes d’objectifs pertinentes
+    # 🔹 Heuristique pour repérer les colonnes d’objectifs pertinentes
     objectif_cols = [
         col for col in df.columns
         if any(kw in col for kw in ['O.Strat', 'O.Opér', 'Objectifs Stratégiques', 'Objectifs Opérationnels']) 
-        and "N" in col  # on cible bien Exercice N
+        and "N" in col  # cible bien Exercice N
     ]
 
     for col in objectif_cols:
         if col in df.columns:
+            # Conversion numérique sécurisée
+            df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
+
             var_colname = f"VARIATION {col} vs Réel N (%)"
             df[var_colname] = compute_ratio(df[col_reel_n], df[col])
 
     return df
+
 
 
 

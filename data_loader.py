@@ -1,6 +1,7 @@
 
 import pandas as pd
 from config import *
+import xlrd
 
 # def get_latest_excel_file(folder):
 #     """
@@ -13,18 +14,16 @@ from config import *
 #     return os.path.join(folder, files[0])
 
 
-# def load_excel_data_dynamic_start(file_path):
-#     preview_df = pd.read_excel(file_path, header=None, engine="calamine")
-#     start_row_idx = preview_df[0].astype(str).str.contains(
-#         "Liste des données qui seront utilisées pour", case=False, na=False
-#     )
-#     if start_row_idx.any():
-#         start_index = start_row_idx[start_row_idx].index[0] + 1
-#         return pd.read_excel(file_path, skiprows=start_index, engine="calamine")
-#     else:
-#         raise ValueError("❌ Ligne de début de données introuvable dans le fichier.")
-
-
+def load_excel_data_dynamic_start(file_path):
+    preview_df = pd.read_excel(file_path, header=None, engine="calamine")
+    start_row_idx = preview_df[0].astype(str).str.contains(
+        "Liste des données qui seront utilisées pour", case=False, na=False
+    )
+    if start_row_idx.any():
+        start_index = start_row_idx[start_row_idx].index[0] + 1
+        return pd.read_excel(file_path, skiprows=start_index, engine="calamine")
+    else:
+        raise ValueError("❌ Ligne de début de données introuvable dans le fichier.")
 
 
 def load_data(uploaded_file):
@@ -35,6 +34,7 @@ def load_data(uploaded_file):
     import pandas as pd
     import streamlit as st
     import tempfile
+    import xlrd
 
     df_onglet_1 = df_onglet_2 = df_onglet_3 = source = None
     temp_file_path = None
@@ -79,9 +79,24 @@ def load_data(uploaded_file):
         "onglet 3": onglet_3
     }
 
+    def clean_dataframe(df):
+        """Nettoie le DataFrame pour éviter les erreurs de type (NaN texte, tirets, etc.)."""
+        if df is None or df.empty:
+            return df
+        # Remplacer les valeurs invalides
+        df = df.replace(["NaN", "nan", "-", ""], pd.NA)
+        
+        for col in df.columns:
+            # Conversion numérique si possible
+            df[col] = pd.to_numeric(df[col], errors="ignore")
+        
+        # Remplace pandas.NA par None pour compatibilité openpyxl
+        df = df.where(pd.notna(df), None)
+        
+        return df
+    
     for nom, sheet in onglets_attendus.items():
         df = pd.DataFrame()  # par défaut vide
-        # Chercher onglet en ignorant les espaces invisibles
         matched_sheets = [s for s in available_sheets if s.strip() == sheet.strip()]
         if matched_sheets:
             try:
@@ -89,22 +104,32 @@ def load_data(uploaded_file):
                 df = pd.read_excel(temp_file_path, sheet_name=matched_sheets[0], engine="calamine")
             except Exception:
                 try:
-                    # fallback openpyxl
-                    df = pd.read_excel(temp_file_path, sheet_name=matched_sheets[0])
+                    # fallback xlrd
+                    workbook = xlrd.open_workbook_xls(temp_file_path, ignore_workbook_corruption=True)
+                    df = pd.read_excel(workbook, sheet_name=matched_sheets[0])
                 except Exception as e2:
                     st.warning(f"⚠️ Impossible de lire {nom} : {e2}")
+                    df = pd.DataFrame()
         else:
             st.warning(f"⚠️ {nom.capitalize()} est absent du fichier source.")
 
-        # Assignation dans la variable correspondante
+        # Nettoyage systématique
+        df = clean_dataframe(df)
+
+        # Assignation
         if nom == "onglet 1":
-            df_onglet_1 = df
+            try:
+                df_onglet_1 = load_excel_data_dynamic_start(temp_file_path)
+                df_onglet_1 = clean_dataframe(df_onglet_1)
+            except Exception:
+                df_onglet_1 = df
         elif nom == "onglet 2":
             df_onglet_2 = df
         elif nom == "onglet 3":
             df_onglet_3 = df
 
     return df_onglet_1, df_onglet_2, df_onglet_3, source
+
 
 
 

@@ -14,7 +14,7 @@ from preprocessing import filter_and_rename_columns, compute_variations,plot_var
 from components.tab_dataframes import afficher_onglet, filtrer_par_code_axe     
 from components.tab_dashboards import afficher_tableau
 from components.graphs_dashboard import generate_graphs_par_indicateur_en_colonnes
-from components.export_excel import export_excel_with_figures
+from components.export_excel import export_excel_with_figures,sanitize_for_excel
 from utils.styles import style_kpi, load_css
 from authentification.auth import load_auth_config, get_org_logo
 
@@ -144,13 +144,20 @@ def run_app(name, authenticator=None):
             "📊 Données brutes": (df2_apercu, 2),
             # "📋 Rapport consolidé": (df3, 3),
         }
-        choix = st.radio("🧭 Choisissez l'onglet (aperçu des données) :", list(onglet_map.keys()))
-        afficher_onglet(*onglet_map[choix])
-                 
+
+        choix = st.radio(
+            "🧭 Choisissez l'onglet (aperçu des données) :", 
+            list(onglet_map.keys())
+        )
+
+        # Mettre l’aperçu des données dans un expander
+        with st.expander(f"Aperçu des données - {choix}", expanded=True):
+            afficher_onglet(*onglet_map[choix])
+
 
         cols1 = [
             'Axe',
-            'Code Rapport Indicateur Virtuel', 'Nom Rapport Indicateur Virtuel',
+            'Code Rapport Indicateur Virtuel', 'Code App indicateur Virtuel',
             'Nom indicateur Virtuel',
             'Reel N-1', 'Reel N', 'VARIATION Réel N vs Réel N-1 (%)',
             "Unité de conversion de l'indicateur",
@@ -160,7 +167,7 @@ def run_app(name, authenticator=None):
 
         cols2 = [
             'Axe',
-            'Code Rapport Indicateur Virtuel', 'Nom Rapport Indicateur Virtuel',
+            'Code Rapport Indicateur Virtuel', 'Code App indicateur Virtuel',
             'Nom indicateur Virtuel',
             'Reel N', 'Objectifs Opérationnels SEUIL période N',
             'VARIATION Objectifs Opérationnels SEUIL période N vs Réel N (%)',
@@ -174,7 +181,7 @@ def run_app(name, authenticator=None):
 
         cols3 = [
             'Axe',
-            'Code Rapport Indicateur Virtuel', 'Nom Rapport Indicateur Virtuel',
+            'Code Rapport Indicateur Virtuel', 'Code App indicateur Virtuel',
             'Nom indicateur Virtuel',
             'Reel N', 'Objectifs Stratégiques SEUIL période N',
             'VARIATION Objectifs Stratégiques SEUIL période N vs Réel N (%)',
@@ -212,19 +219,19 @@ def run_app(name, authenticator=None):
         if st.session_state.onglet_actif == 0:
             df3_filtré = filtrer_par_code_axe(df3, key_prefix="tab1")
             available_cols1 = [col for col in cols1 if col in df3_filtré.columns]
-            st.session_state['df_tab1_filtré'] = df3_filtré[available_cols1]
+            st.session_state['df_tab1_filtré'] = df3_filtré[available_cols1].sort_values(by=['Code App indicateur Virtuel'],ignore_index=True)
             afficher_tableau("📋 Tableau REEL N vs N‑1", st.session_state['df_tab1_filtré'], style_kpi, logo_path)
 
         elif st.session_state.onglet_actif == 1:
             df3_filtré = filtrer_par_code_axe(df3, key_prefix="tab2")
             available_cols2 = [col for col in cols2 if col in df3_filtré.columns]
-            st.session_state['df_tab2_filtré'] = df3_filtré[available_cols2]
+            st.session_state['df_tab2_filtré'] = df3_filtré[available_cols2].sort_values(by=['Code App indicateur Virtuel'],ignore_index=True)
             afficher_tableau("📋 REEL N vs Obj. Opérationnels", st.session_state['df_tab2_filtré'], style_kpi, logo_path)
 
         elif st.session_state.onglet_actif == 2:
             df3_filtré = filtrer_par_code_axe(df3, key_prefix="tab3")
             available_cols3 = [col for col in cols3 if col in df3_filtré.columns]
-            st.session_state['df_tab3_filtré'] = df3_filtré[available_cols3]
+            st.session_state['df_tab3_filtré'] = df3_filtré[available_cols3].sort_values(by=['Code App indicateur Virtuel'],ignore_index=True)
             afficher_tableau("📋 REEL N vs Obj. Stratégiques", st.session_state['df_tab3_filtré'], style_kpi, logo_path)
 
         elif st.session_state.onglet_actif == 3:
@@ -285,9 +292,9 @@ def run_app(name, authenticator=None):
             df3_export = df3[available_cols3]
 
         df_list = [
-            (df1_export, "REEL_N_vs_N-1"),
-            (df2_export, "REEL_N_vs_Obj_Op"),
-            (df3_export, "REEL_N_vs_Obj_Strat"),
+            (sanitize_for_excel(df1_export), "REEL_N_vs_N-1"),
+            (sanitize_for_excel(df2_export), "REEL_N_vs_Obj_Op"),
+            (sanitize_for_excel(df3_export), "REEL_N_vs_Obj_Strat"),
         ]
 
         figs = st.session_state.get('last_figs', [])
