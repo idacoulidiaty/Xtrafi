@@ -393,9 +393,13 @@ def organization_management(config, current_roles, current_orgs):
         if selected_orga == "Nouvelle organisation" and can_edit_all_orgs:
             new_org_name = st.text_input("Nom de la nouvelle organisation", "")
             uploaded_logo = st.file_uploader("Uploader un logo (png/jpg)", type=["png", "jpg", "jpeg"])
+            # On ne garde que les utilisateurs qui existent vraiment dans users_list
+            valid_defaults = [u for u in users_in_orga if u in users_list]
+
             selected_users = st.multiselect("Modifier les utilisateurs affectés",
-                                            options=users_list,
-                                            default=[])
+                                options=users_list,
+                                default=valid_defaults
+                                )
 
             if st.button("Créer organisation", key="create_new_org"):
                 if not new_org_name.strip():
